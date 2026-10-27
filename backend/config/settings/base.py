@@ -23,7 +23,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "vakcare-insecure-default-key-change
 DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() in ("true", "1", "yes")
 
 # Allowed Hosts
-ALLOWED_HOSTS_STR = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1],.vercel.app")
+ALLOWED_HOSTS_STR = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1],.vercel.app,*")
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(",") if host.strip()]
 vercel_url = os.getenv("VERCEL_URL")
 if vercel_url and vercel_url not in ALLOWED_HOSTS:
@@ -103,6 +103,7 @@ AUTH_USER_MODEL = "accounts.User"
 
 # Database Configuration (MySQL / PostgreSQL / Cloud Database)
 DATABASE_URL = os.getenv("DATABASE_URL")
+
 if DATABASE_URL:
     from urllib.parse import urlparse, unquote
     parsed_db = urlparse(DATABASE_URL)
@@ -120,14 +121,14 @@ if DATABASE_URL:
         DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.mysql")
         default_port = "3306"
 
-    DB_NAME = parsed_db.path.lstrip("/") or os.getenv("DB_NAME", "vakcare_db")
+    DB_NAME = parsed_db.path.lstrip("/") or os.getenv("DB_NAME", "defaultdb")
     DB_USER = unquote(parsed_db.username or "") or os.getenv("DB_USER", "root")
     DB_PASSWORD = unquote(parsed_db.password or "") or os.getenv("DB_PASSWORD", "")
     DB_HOST = parsed_db.hostname or os.getenv("DB_HOST", "127.0.0.1")
     DB_PORT = str(parsed_db.port or default_port)
 else:
     DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.mysql")
-    DB_NAME = os.getenv("DB_NAME", "vakcare_db")
+    DB_NAME = os.getenv("DB_NAME", "defaultdb")
     DB_USER = os.getenv("DB_USER", "root")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "")
     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")

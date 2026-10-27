@@ -7,8 +7,11 @@ from pathlib import Path
 from django.core.wsgi import get_wsgi_application
 
 base_dir = Path(__file__).resolve().parent.parent
+root_dir = base_dir.parent
 if str(base_dir) not in sys.path:
     sys.path.insert(0, str(base_dir))
+if str(root_dir) not in sys.path:
+    sys.path.insert(0, str(root_dir))
 
 # Serverless environment fallback: install PyMySQL as MySQLdb driver if native MySQLdb is unavailable
 try:
