@@ -22,8 +22,13 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "vakcare-insecure-default-key-change
 DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() in ("true", "1", "yes")
 
 # Allowed Hosts
-ALLOWED_HOSTS_STR = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]")
+ALLOWED_HOSTS_STR = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1],.vercel.app")
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(",") if host.strip()]
+vercel_url = os.getenv("VERCEL_URL")
+if vercel_url and vercel_url not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(vercel_url)
+if ".vercel.app" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".vercel.app")
 
 # Application definition
 DJANGO_APPS = [
@@ -140,7 +145,11 @@ DATABASES = {
 }
 
 # Cloud MySQL SSL Option (Aiven, PlanetScale, Railway, AWS RDS)
-if os.getenv("DB_SSL_REQUIRE", "False").lower() in ("true", "1", "yes"):
+is_ssl_required = (
+    os.getenv("DB_SSL_REQUIRE", "False").lower() in ("true", "1", "yes")
+    or bool(DATABASE_URL and ("ssl-mode" in DATABASE_URL.lower() or "aivencloud" in DATABASE_URL.lower()))
+)
+if is_ssl_required:
     DATABASES["default"]["OPTIONS"]["ssl"] = {"ssl_mode": "REQUIRED"}
 
 # Password validation
@@ -255,6 +264,14 @@ CSRF_TRUSTED_ORIGINS_STR = os.getenv(
 CSRF_TRUSTED_ORIGINS = [
     origin.strip() for origin in CSRF_TRUSTED_ORIGINS_STR.split(",") if origin.strip()
 ]
+
+# Auto-add Vercel deployment URL to trusted origins if running on Vercel
+if vercel_url:
+    vercel_origin = f"https://{vercel_url}"
+    if vercel_origin not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(vercel_origin)
+    if vercel_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(vercel_origin)
 
 # Baseline Security Defaults
 SECURE_CONTENT_TYPE_NOSNIFF = True
