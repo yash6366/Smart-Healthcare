@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Appointments Oversight — Admin Portal — VakCare</title>
+  <meta name="description" content="Platform appointment scheduling oversight and state management.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app-main">
+      <div class="app-content">
+        <!-- Toolbar Filters -->
+        <div class="action-toolbar">
+          <div class="filter-group">
+            <select id="statusFilter" class="form-select" style="width: auto; min-width: 180px;">
+              <option value="">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="CANCELLED">Cancelled</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+
+            <input type="date" id="dateFilter" class="form-control" style="width: auto;">
+            <button id="resetFilterBtn" class="btn btn-outline btn-sm">Reset</button>
+          </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="card">
+          <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="border: none; box-shadow: none;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Scheduled Slot</th>
+                    <th>Duration</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Admin Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminApptsTbody">
+                  <tr>
+                    <td colspan="8" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { Auth } from '../../js/auth.js';
+    import { api } from '../../js/api-client.js';
+    import { initAppLayout } from '../../js/components.js';
+    import { formatDate, formatTime, renderStatusBadge, renderEmptyState, escapeHtml, showToast, showConfirmDialog, showPromptDialog } from '../../js/ui.js';
+
+    const user = await Auth.guardRoute(['ADMIN']);
+    if (!user) throw new Error('Unauthorized');
+
+    await initAppLayout({
+      title: 'Global Appointments Oversight',
+      subtitle: 'Complete scheduling oversight across all hospital departments',
+    });
+
+    const statusFilter = document.getElementById('statusFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const resetBtn = document.getElementById('resetFilterBtn');
+
+    statusFilter.addEventListener('change', loadAppointments);
+    dateFilter.addEventListener('change', loadAppointments);
+    resetBtn.addEventListener('click', () => {
+      statusFilter.value = '';
+      dateFilter.value = '';
+      loadAppointments();
+    });
+
+    loadAppointments();
+
+    async function loadAppointments() {
+      const tbody = document.getElementById('adminApptsTbody');
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td></tr>`;
+
+      const params = {};
+      if (statusFilter.value) params.status = statusFilter.value;
+      if (dateFilter.value) params.date = dateFilter.value;
+
+      try {
+        const res = await api.get('/appointments/', params);
+        const list = res.results || [];
+
+        if (list.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8">
+                ${renderEmptyState({
+                  title: 'No Appointments Found',
+                  message: 'No scheduled appointments match the chosen filter.',
+                })}
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = list.map(a => {
+          let actions = '';
+          if (a.status === 'PENDING') {
+            actions = `
+              <button class="btn btn-primary btn-sm confirm-btn" data-id="${a.id}">Confirm</button>
+              <button class="btn btn-outline btn-sm text-danger reject-btn" data-id="${a.id}">Reject</button>
+            `;
+          } else if (a.status === 'CONFIRMED') {
+            actions = `
+              <button class="btn btn-outline btn-sm text-success complete-btn" data-id="${a.id}">Complete</button>
+              <button class="btn btn-ghost btn-sm text-danger cancel-btn" data-id="${a.id}">Cancel</button>
+            `;
+          } else {
+            actions = `<span style="font-size: 0.75rem; color: var(--color-text-subtle);">Terminal</span>`;
+          }
+
+          const patientName = a.patient?.user?.first_name ? `${a.patient.user.first_name} ${a.patient.user.last_name}` : a.patient?.user?.username || 'Patient';
+
+          return `
+            <tr>
+              <td><span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text-subtle);">#${a.id}</span></td>
+              <td><strong>${escapeHtml(patientName)}</strong></td>
+              <td>Dr. ${escapeHtml(a.doctor?.display_name || 'Specialist')}</td>
+              <td>
+                <div style="font-weight: 500;">${formatDate(a.appointment_date)}</div>
+                <div style="font-size: 0.75rem; color: var(--color-text-subtle);">${formatTime(a.start_time)}</div>
+              </td>
+              <td>${a.duration_minutes} min</td>
+              <td style="max-width: 220px;">
+                <div style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(a.reason)}">
+                  ${escapeHtml(a.reason)}
+                </div>
+              </td>
+              <td>${renderStatusBadge(a.status)}</td>
+              <td>
+                <div class="flex gap-2 items-center">
+                  ${actions}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        tbody.querySelectorAll('.confirm-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            try {
+              await api.post(`/appointments/${btn.dataset.id}/confirm/`);
+              showToast('Appointment confirmed by Administrator.', 'success');
+              loadAppointments();
+            } catch (err) {
+              showToast(err.message || 'Operation failed.', 'error');
+            }
+          });
+        });
+
+        tbody.querySelectorAll('.complete-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const confirmed = await showConfirmDialog({
+              title: 'Complete Consultation',
+              message: 'Mark consultation as completed?',
+            });
+            if (confirmed) {
+              try {
+                await api.post(`/appointments/${btn.dataset.id}/complete/`);
+                showToast('Appointment completed.', 'success');
+                loadAppointments();
+              } catch (err) {
+                showToast(err.message || 'Operation failed.', 'error');
+              }
+            }
+          });
+        });
+
+        tbody.querySelectorAll('.reject-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const reason = await showPromptDialog({
+              title: 'Administrative Rejection',
+              message: 'Please provide the administrative reason for rejecting this appointment:',
+              placeholder: 'e.g. Doctor unavailable, scheduling conflict...',
+              confirmText: 'Reject Appointment',
+              isDanger: true,
+              required: true,
+            });
+            if (!reason) return;
+            try {
+              await api.post(`/appointments/${btn.dataset.id}/reject/`, { reason });
+              showToast('Appointment rejected.', 'info');
+              loadAppointments();
+            } catch (err) {
+              showToast(err.message || 'Operation failed.', 'error');
+            }
+          });
+        });
+
+        tbody.querySelectorAll('.cancel-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const reason = await showPromptDialog({
+              title: 'Administrative Cancellation',
+              message: 'Please provide the administrative reason for cancelling this appointment:',
+              placeholder: 'e.g. Patient emergency, clinical rescheduling required...',
+              confirmText: 'Cancel Appointment',
+              isDanger: true,
+              required: true,
+            });
+            if (!reason) return;
+            try {
+              await api.post(`/appointments/${btn.dataset.id}/cancel/`, { cancellation_reason: reason });
+              showToast('Appointment cancelled.', 'info');
+              loadAppointments();
+            } catch (err) {
+              showToast(err.message || 'Operation failed.', 'error');
+            }
+          });
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-danger text-center">Failed to load appointments: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+  </script>
+</body>
+</html>

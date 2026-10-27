@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VakCare — Intelligent Healthcare Management Platform</title>
+  <meta name="description" content="Connecting patients, verified doctors, and healthcare administrators with integrated appointments, medical records, and AI assistance.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/landing.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="landing-header">
+    <div class="container landing-nav">
+      <a href="index.html" class="flex items-center gap-3" aria-label="VakCare Home">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M7 7l10 10M17 7 7 17"/></svg>
+        </div>
+        <span class="brand-name" style="font-size: 1.35rem;">VakCare</span>
+      </a>
+
+      <nav class="landing-links" aria-label="Main Navigation">
+        <a href="#services" class="landing-link">Services</a>
+        <a href="#doctors" class="landing-link">Specialists</a>
+        <a href="#ai-assistant" class="landing-link">AI Assistant</a>
+        <a href="#how-it-works" class="landing-link">How It Works</a>
+        <a href="#about" class="landing-link">About</a>
+      </nav>
+
+      <div class="landing-auth-group" id="authNavButtons">
+        <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
+        <a href="register.html" class="btn btn-primary btn-sm">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero-section">
+    <div class="container hero-grid">
+      <div>
+        <div class="hero-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+          Trusted Healthcare Management
+        </div>
+        <h1 class="hero-title">
+          Healthcare connected with <span class="highlight">precision</span> and empathy.
+        </h1>
+        <p class="hero-description">
+          VakCare unites patients, certified physicians, and hospital administrators in an intuitive ecosystem with instant consultation booking, digital health records, and AI-assisted guidance.
+        </p>
+
+        <div class="hero-actions">
+          <a href="register.html" class="btn btn-primary btn-lg" id="heroBookConsultation">Create Patient Account</a>
+          <a href="#ai-assistant" class="btn btn-outline btn-lg" id="heroExploreAi">Explore AI Assistant</a>
+        </div>
+
+        <div class="hero-trust-bar">
+          <div class="trust-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-success"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span>Verified Medical Specialists</span>
+          </div>
+          <div class="trust-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-success"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Audited & Encrypted EHR</span>
+          </div>
+          <div class="trust-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-success"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Atomic Slot Scheduling</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Visual Card -->
+      <div class="hero-card">
+        <div class="hero-card-header">
+          <div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--color-primary); font-weight: 700; letter-spacing: 0.05em;">Live Platform Preview</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-text-main);">Clinical Consultation</div>
+          </div>
+          <span class="badge badge-confirmed">System Ready</span>
+        </div>
+
+        <div class="hero-preview-row">
+          <div class="flex items-center gap-3">
+            <div class="avatar" style="width: 32px; height: 32px; font-size: 0.75rem;">RS</div>
+            <div>
+              <div style="font-weight: 600;">Dr. Ramesh Sharma</div>
+              <div style="font-size: 0.75rem; color: var(--color-text-muted);">Cardiology Specialist</div>
+            </div>
+          </div>
+          <span class="badge badge-confirmed">Confirmed</span>
+        </div>
+
+        <div class="hero-preview-row">
+          <div class="flex items-center gap-3">
+            <div class="avatar" style="width: 32px; height: 32px; font-size: 0.75rem;">AK</div>
+            <div>
+              <div style="font-weight: 600;">Dr. Anil Kumar</div>
+              <div style="font-size: 0.75rem; color: var(--color-text-muted);">Dermatology Consultation</div>
+            </div>
+          </div>
+          <span class="badge badge-pending">Pending</span>
+        </div>
+
+        <div style="margin-top: var(--space-4); padding: var(--space-4); background-color: var(--color-primary-subtle); border: 1px solid var(--color-primary-border); border-radius: var(--radius-md);">
+          <div class="flex items-center gap-2" style="font-size: 0.8rem; font-weight: 600; color: var(--color-primary); margin-bottom: 4px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            AI Clinical Assistant Active
+          </div>
+          <div style="font-size: 0.75rem; color: var(--color-text-muted);">
+            Empowering patients with informational symptom education and simplified medical record summaries.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Healthcare Services Section -->
+  <section class="section" id="services">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-subtitle">Our Capabilities</div>
+        <h2 class="section-title">A complete healthcare ecosystem</h2>
+        <p>Built to handle patient inquiries, clinical workflows, and administrative compliance with modern standards.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-box">
+          <div class="feature-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          </div>
+          <h3>Atomic Appointment Scheduling</h3>
+          <p>Book consultations with verified medical specialists. Real-time slot conflict prevention eliminates double-booking.</p>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <h3>Digital Medical Records (EHR)</h3>
+          <p>Secure clinical notes, diagnosis records, and lab result tracking strictly partitioned by ownership and verified doctor permissions.</p>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+          </div>
+          <h3>Prescription Management</h3>
+          <p>Formal digital prescriptions authored by licensed doctors with itemized dosages, frequencies, and duration guidelines.</p>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+          </div>
+          <h3>Compliance & Audit Logging</h3>
+          <p>Every sensitive action, medical record retrieval, and authentication event is immutably logged for administrative oversight.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Healthcare Assistant Callout -->
+  <section class="section" id="ai-assistant" style="background-color: var(--color-bg-subtle);">
+    <div class="container">
+      <div class="ai-callout-banner">
+        <div>
+          <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.2); padding: 4px 12px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; margin-bottom: 1rem;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            Intelligent Health Guidance
+          </div>
+          <h2>AI Healthcare Assistant</h2>
+          <p>
+            Receive informational health education, symptom understanding, and patient-friendly medical record summaries. Designed with strict safety boundaries and healthcare disclaimers.
+          </p>
+          <div style="font-size: 0.8rem; background: rgba(0, 0, 0, 0.2); padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; line-height: 1.5;">
+            <strong>Important Safety Notice:</strong> The AI Healthcare Assistant provides educational context and is not a substitute for a qualified healthcare professional. Always consult licensed doctors for medical diagnoses.
+          </div>
+          <a href="register.html" class="btn btn-secondary btn-lg">Experience AI Assistant</a>
+        </div>
+
+        <div class="ai-preview-box">
+          <div style="font-weight: 600; margin-bottom: 8px; color: #f0fdfa;">Sample Patient Query</div>
+          <div style="background: rgba(0, 0, 0, 0.25); padding: 10px; border-radius: 6px; margin-bottom: 12px; font-style: italic;">
+            "I've had a recurring headache and neck stiffness after screen work."
+          </div>
+          <div style="font-weight: 600; margin-bottom: 4px; color: #38bdf8;">Assistant Guidance</div>
+          <p style="font-size: 0.85rem; color: rgba(255,255,255,0.9); margin-bottom: 8px;">
+            Identifies possible ergonomic eye strain and tension indicators, recommending hydration, frequent screen breaks, and consultation with a general physician or neurologist if symptoms persist.
+          </p>
+          <div class="badge badge-info" style="color: white; border-color: rgba(255,255,255,0.3);">
+            Recommended: General Medicine / Neurology
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-subtitle">Simplified Process</div>
+        <h2 class="section-title">How VakCare Works</h2>
+        <p>Three straightforward steps to access modern clinical care.</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Create Patient Profile</h3>
+          <p>Register securely in seconds with your verified email. Provide health demographic details to establish your secure clinical record.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Choose Medical Specialist</h3>
+          <p>Browse certified doctors by specialization, years of experience, and consultation fees. Inspect available consultation hours.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Consult & Manage Health</h3>
+          <p>Book atomic time slots, track confirmation status, access electronic health records, and receive digital prescriptions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="section" id="about" style="background-color: var(--color-bg-subtle);">
+    <div class="container" style="max-width: 800px; text-align: center;">
+      <div class="section-subtitle">About VakCare</div>
+      <h2 class="section-title">Engineered for patient trust & clinical reliability</h2>
+      <p style="line-height: 1.8; margin-bottom: var(--space-8);">
+        VakCare was developed to bridge the coordination gap between patients and medical professionals. Designed around the principle of least privilege, strict HIPAA-inspired audit tracking, and accessible design, VakCare guarantees that patient data is confidential, doctor schedules are respected, and hospital administrators maintain full operational visibility.
+      </p>
+      <div class="flex justify-center gap-4">
+        <a href="register.html" class="btn btn-primary btn-lg">Join VakCare Today</a>
+        <a href="login.html" class="btn btn-outline btn-lg">Sign In to Your Portal</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="flex items-center gap-3" style="margin-bottom: var(--space-4);">
+            <div class="brand-logo" style="width: 32px; height: 32px; font-size: 1rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20M7 7l10 10M17 7 7 17"/></svg>
+            </div>
+            <span style="font-size: 1.25rem; font-weight: 700; color: white;">VakCare</span>
+          </div>
+          <p style="font-size: 0.85rem; color: #94a3b8; max-width: 320px; line-height: 1.6;">
+            Next-generation healthcare management platform. Connecting verified doctors and patients with AI-powered assistance.
+          </p>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Portals</div>
+          <div class="footer-link-list">
+            <a href="login.html">Patient Portal</a>
+            <a href="login.html">Doctor Portal</a>
+            <a href="login.html">Administrator Portal</a>
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Services</div>
+          <div class="footer-link-list">
+            <a href="#services">Appointment Booking</a>
+            <a href="#services">Digital EHR Records</a>
+            <a href="#services">Electronic Prescriptions</a>
+            <a href="#ai-assistant">AI Health Education</a>
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">System</div>
+          <div class="footer-link-list">
+            <a id="openapi-link" href="http://127.0.0.1:8000/api/docs/" target="_blank" rel="noopener">OpenAPI Specification</a>
+            <a id="health-link" href="http://127.0.0.1:8000/api/v1/health/" target="_blank" rel="noopener">System Health Check</a>
+            <a href="#about">Security Overview</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 VakCare Healthcare Management. All rights reserved.</div>
+        <div style="color: #64748b;">Medical advice disclaimer: Always consult qualified healthcare specialists for diagnosis and treatment.</div>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { Auth } from './js/auth.js';
+    import { getAppPath } from './js/config.js';
+
+    // Adapt API links for production domains
+    if (window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost') {
+      document.getElementById('openapi-link')?.setAttribute('href', '/api/docs/');
+      document.getElementById('health-link')?.setAttribute('href', '/api/v1/health/');
+    }
+
+    // If already authenticated, update header action to Dashboard
+    if (Auth.isAuthenticated()) {
+      const user = Auth.getUser();
+      const authGroup = document.getElementById('authNavButtons');
+      if (authGroup && user) {
+        let dashboardHref = getAppPath('/pages/patient/dashboard.html');
+        if (user.role === 'DOCTOR') dashboardHref = getAppPath('/pages/doctor/dashboard.html');
+        if (user.role === 'ADMIN') dashboardHref = getAppPath('/pages/admin/dashboard.html');
+
+        authGroup.innerHTML = `
+          <a href="${dashboardHref}" class="btn btn-primary btn-sm">Go to Dashboard (${user.role})</a>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>

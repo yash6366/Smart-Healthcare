@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Health & Reports — Admin Portal — VakCare</title>
+  <meta name="description" content="Operational diagnostics, database connectivity, and platform analytics.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app-main">
+      <div class="app-content">
+        <!-- Time Window Selector & Actions -->
+        <div class="flex items-center justify-between" style="margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-3);">
+          <div class="flex items-center gap-2">
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-muted);">Analytics Window:</span>
+            <div class="btn-group" id="windowBtnGroup">
+              <button class="btn btn-sm btn-outline" data-days="7">7 Days</button>
+              <button class="btn btn-sm btn-primary" data-days="30">30 Days</button>
+              <button class="btn btn-sm btn-outline" data-days="90">90 Days</button>
+              <button class="btn btn-sm btn-outline" data-days="365">1 Year</button>
+            </div>
+          </div>
+          <button id="recheckHealthBtn" class="btn btn-outline btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Refresh Diagnostics & Metrics
+          </button>
+        </div>
+
+        <!-- Live Health Diagnostic Probe -->
+        <div class="card" style="margin-bottom: var(--space-6);">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Live Infrastructure Health Probes</h2>
+              <span style="font-size: 0.8rem; color: var(--color-text-muted);">Real-time service liveness, database connectivity, and AI integration readiness</span>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <div class="grid grid-cols-3 gap-4">
+              <div style="background-color: var(--color-bg-subtle); padding: var(--space-4); border-radius: var(--radius-lg); border: 1px solid var(--color-bg-muted);">
+                <div class="flex items-center justify-between" style="margin-bottom: var(--space-2);">
+                  <strong style="font-size: 0.9rem;">Liveness Probe</strong>
+                  <span id="livenessBadge" class="badge badge-neutral">Checking...</span>
+                </div>
+                <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-text-muted);">
+                  GET /api/v1/health/
+                </div>
+                <div style="font-size: 0.8rem; margin-top: var(--space-2); color: var(--color-text-main);" id="livenessMsg">
+                  Pinging backend server process...
+                </div>
+              </div>
+
+              <div style="background-color: var(--color-bg-subtle); padding: var(--space-4); border-radius: var(--radius-lg); border: 1px solid var(--color-bg-muted);">
+                <div class="flex items-center justify-between" style="margin-bottom: var(--space-2);">
+                  <strong style="font-size: 0.9rem;">Database Readiness</strong>
+                  <span id="readinessBadge" class="badge badge-neutral">Checking...</span>
+                </div>
+                <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-text-muted);">
+                  GET /api/v1/health/ready/
+                </div>
+                <div style="font-size: 0.8rem; margin-top: var(--space-2); color: var(--color-text-main);" id="readinessMsg">
+                  Testing active database pool...
+                </div>
+              </div>
+
+              <div style="background-color: var(--color-bg-subtle); padding: var(--space-4); border-radius: var(--radius-lg); border: 1px solid var(--color-bg-muted);">
+                <div class="flex items-center justify-between" style="margin-bottom: var(--space-2);">
+                  <strong style="font-size: 0.9rem;">AI Provider Status</strong>
+                  <span id="aiBadge" class="badge badge-neutral">Checking...</span>
+                </div>
+                <div style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--color-text-muted);">
+                  AI Assistant & Summarizer
+                </div>
+                <div style="font-size: 0.8rem; margin-top: var(--space-2); color: var(--color-text-main);" id="aiMsg">
+                  Inspecting provider configuration...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric KPI Cards with Explicit Denominators -->
+        <div class="grid grid-cols-4 gap-4" style="margin-bottom: var(--space-6);">
+          <div class="card" style="padding: var(--space-4);">
+            <div style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: 600; text-transform: uppercase;">Completion Rate</div>
+            <div id="kpiCompletionRate" style="font-size: 1.8rem; font-weight: 700; color: var(--color-success); margin: var(--space-1) 0;">--%</div>
+            <div id="kpiCompletionDenom" style="font-size: 0.75rem; color: var(--color-text-muted);">Calculating finalized vs total terminal...</div>
+          </div>
+
+          <div class="card" style="padding: var(--space-4);">
+            <div style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: 600; text-transform: uppercase;">Cancellation Rate</div>
+            <div id="kpiCancelRate" style="font-size: 1.8rem; font-weight: 700; color: var(--color-danger); margin: var(--space-1) 0;">--%</div>
+            <div id="kpiCancelDenom" style="font-size: 0.75rem; color: var(--color-text-muted);">Calculating cancellations vs scheduled...</div>
+          </div>
+
+          <div class="card" style="padding: var(--space-4);">
+            <div style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: 600; text-transform: uppercase;">Active Patients</div>
+            <div id="kpiPatients" style="font-size: 1.8rem; font-weight: 700; color: var(--color-primary); margin: var(--space-1) 0;">--</div>
+            <div style="font-size: 0.75rem; color: var(--color-text-muted);">Registered patient portal accounts</div>
+          </div>
+
+          <div class="card" style="padding: var(--space-4);">
+            <div style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: 600; text-transform: uppercase;">Practitioners</div>
+            <div id="kpiDoctors" style="font-size: 1.8rem; font-weight: 700; color: var(--color-text-main); margin: var(--space-1) 0;">--</div>
+            <div id="kpiDoctorsVerified" style="font-size: 0.75rem; color: var(--color-text-muted);">-- verified, -- pending review</div>
+          </div>
+        </div>
+
+        <!-- Analytical Breakdown Grid -->
+        <div class="grid grid-cols-2 gap-6" style="margin-bottom: var(--space-6);">
+          <!-- Consultation Status Metrics -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Consultations Breakdown (Selected Window)</h2>
+            </div>
+            <div class="card-body" id="apptsBreakdownContainer">
+              <div class="text-center" style="padding: 1.5rem;"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+          <!-- Clinical Records & Audit Volumes -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Clinical Volumes & System Activity</h2>
+            </div>
+            <div class="card-body" id="clinicalVolumesContainer">
+              <div class="text-center" style="padding: 1.5rem;"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Practitioner Workloads -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Top Practitioner Workload Distribution</h2>
+              <span style="font-size: 0.8rem; color: var(--color-text-muted);">Aggregated consultations assigned within the current analytics window</span>
+            </div>
+          </div>
+          <div class="card-body" id="workloadTableContainer">
+            <div class="text-center" style="padding: 1.5rem;"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { Auth } from '../../js/auth.js';
+    import { api } from '../../js/api-client.js';
+    import { initAppLayout } from '../../js/components.js';
+    import { escapeHtml, showToast } from '../../js/ui.js';
+
+    const user = await Auth.guardRoute(['ADMIN']);
+    if (!user) throw new Error('Unauthorized');
+
+    await initAppLayout({
+      title: 'System Health & Analytics',
+      subtitle: 'Operational health probes and platform distribution metrics',
+    });
+
+    let currentDays = 30;
+
+    // Window button handlers
+    const windowBtns = document.querySelectorAll('#windowBtnGroup button');
+    windowBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        windowBtns.forEach(b => {
+          b.className = 'btn btn-sm btn-outline';
+        });
+        btn.className = 'btn btn-sm btn-primary';
+        currentDays = parseInt(btn.dataset.days, 10);
+        loadAnalytics(currentDays);
+      });
+    });
+
+    document.getElementById('recheckHealthBtn').addEventListener('click', () => {
+      runProbes();
+      loadAnalytics(currentDays);
+      showToast('Health diagnostics and metrics refreshed.', 'info');
+    });
+
+    runProbes();
+    loadAnalytics(currentDays);
+
+    async function runProbes() {
+      // 1. Liveness
+      const liveBadge = document.getElementById('livenessBadge');
+      const liveMsg = document.getElementById('livenessMsg');
+      try {
+        const live = await api.get('/health/');
+        liveBadge.className = 'badge badge-confirmed';
+        liveBadge.textContent = (live.status || 'OK').toUpperCase();
+        liveMsg.textContent = `Service: ${live.service || 'backend'} operational.`;
+      } catch (err) {
+        liveBadge.className = 'badge badge-danger';
+        liveBadge.textContent = 'OFFLINE';
+        liveMsg.textContent = 'Backend service is not responding.';
+      }
+
+      // 2. Readiness
+      const readyBadge = document.getElementById('readinessBadge');
+      const readyMsg = document.getElementById('readinessMsg');
+      try {
+        const ready = await api.get('/health/ready/');
+        if (ready.status === 'ready') {
+          readyBadge.className = 'badge badge-confirmed';
+          readyBadge.textContent = 'READY';
+          readyMsg.textContent = `DB verified: ${ready.database || 'active'}. Migrations in sync.`;
+        } else {
+          readyBadge.className = 'badge badge-pending';
+          readyBadge.textContent = 'DEGRADED';
+          readyMsg.textContent = 'Database readiness returned non-optimal status.';
+        }
+      } catch (err) {
+        readyBadge.className = 'badge badge-danger';
+        readyBadge.textContent = 'UNAVAILABLE';
+        readyMsg.textContent = 'Database connection failure.';
+      }
+    }
+
+    async function loadAnalytics(days = 30) {
+      try {
+        const data = await api.get('/audit/analytics/', { days });
+
+        // Update AI Provider badge from system_health
+        const aiBadge = document.getElementById('aiBadge');
+        const aiMsg = document.getElementById('aiMsg');
+        const sysHealth = data.system_health || {};
+        if (sysHealth.ai_engine_configured && sysHealth.ai_engine_configured !== 'NONE') {
+          aiBadge.className = 'badge badge-confirmed';
+          aiBadge.textContent = sysHealth.ai_engine_configured;
+          aiMsg.textContent = 'AI engine active and operational.';
+        } else {
+          aiBadge.className = 'badge badge-pending';
+          aiBadge.textContent = 'MOCK / FALLBACK';
+          aiMsg.textContent = 'AI engine using local mock fallback provider.';
+        }
+
+        // 1. KPIs
+        const rates = data.rates || {};
+        const apptsWin = data.appointments_window || {};
+        document.getElementById('kpiCompletionRate').textContent = `${rates.completion_rate_percent || 0}%`;
+        document.getElementById('kpiCompletionDenom').textContent = `${apptsWin.completed || 0} completed (${rates.completion_rate_denominator || 'Terminal consultations'})`;
+
+        document.getElementById('kpiCancelRate').textContent = `${rates.cancellation_rate_percent || 0}%`;
+        document.getElementById('kpiCancelDenom').textContent = `${apptsWin.cancelled || 0} cancelled (${rates.cancellation_rate_denominator || 'Scheduled consultations'})`;
+
+        const userCounts = data.practitioners_and_patients || {};
+        document.getElementById('kpiPatients').textContent = userCounts.total_patients || 0;
+        document.getElementById('kpiDoctors').textContent = userCounts.total_doctors || 0;
+        document.getElementById('kpiDoctorsVerified').textContent = `${userCounts.verified_doctors || 0} verified, ${userCounts.pending_verification_doctors || 0} pending review`;
+
+        // 2. Appointments Breakdown
+        const apptsContainer = document.getElementById('apptsBreakdownContainer');
+        apptsContainer.innerHTML = `
+          <div class="flex flex-col gap-3">
+            <div class="flex justify-between items-center" style="padding-bottom: 6px; border-bottom: 1px solid var(--color-bg-muted);">
+              <span>Confirmed Consultations</span>
+              <strong class="text-success" style="font-size: 1.1rem;">${apptsWin.confirmed || 0}</strong>
+            </div>
+            <div class="flex justify-between items-center" style="padding-bottom: 6px; border-bottom: 1px solid var(--color-bg-muted);">
+              <span>Pending Confirmation</span>
+              <strong class="text-warning" style="font-size: 1.1rem;">${apptsWin.pending || 0}</strong>
+            </div>
+            <div class="flex justify-between items-center" style="padding-bottom: 6px; border-bottom: 1px solid var(--color-bg-muted);">
+              <span>Completed Consultations</span>
+              <strong class="text-info" style="font-size: 1.1rem;">${apptsWin.completed || 0}</strong>
+            </div>
+            <div class="flex justify-between items-center" style="padding-bottom: 6px; border-bottom: 1px solid var(--color-bg-muted);">
+              <span>Cancelled Bookings</span>
+              <strong class="text-danger" style="font-size: 1.1rem;">${apptsWin.cancelled || 0}</strong>
+            </div>
+            <div class="flex justify-between items-center" style="padding-bottom: 6px; border-bottom: 1px solid var(--color-bg-muted);">
+              <span>Rejected Requests</span>
+              <strong class="text-danger" style="font-size: 1.1rem;">${apptsWin.rejected || 0}</strong>
+            </div>
+            <div class="flex justify-between items-center" style="padding-top: 4px;">
+              <span style="font-weight: 600;">Total Window Consultations</span>
+              <strong style="font-size: 1.15rem;">${apptsWin.total || 0}</strong>
+            </div>
+          </div>
+        `;
+
+        // 3. Clinical Volumes
+        const clin = data.clinical_volume || {};
+        const volumesContainer = document.getElementById('clinicalVolumesContainer');
+        volumesContainer.innerHTML = `
+          <div class="flex flex-col gap-3">
+            <div class="flex justify-between items-center" style="padding-bottom: 6px; border-bottom: 1px solid var(--color-bg-muted);">
+              <span>Total Electronic Prescriptions</span>
+              <strong class="text-primary" style="font-size: 1.1rem;">${clin.total_prescriptions || 0}</strong>
+            </div>
+            <div class="flex justify-between items-center" style="padding-bottom: 6px; border-bottom: 1px solid var(--color-bg-muted);">
+              <span>Official EHR Medical Records</span>
+              <strong class="text-info" style="font-size: 1.1rem;">${clin.total_medical_records || 0}</strong>
+            </div>
+            <div class="flex justify-between items-center" style="padding-bottom: 6px; border-bottom: 1px solid var(--color-bg-muted);">
+              <span>Compliance Audit Trail Events</span>
+              <strong style="font-size: 1.1rem;">${clin.total_audit_events || 0}</strong>
+            </div>
+            <div class="flex justify-between items-center" style="padding-top: 4px;">
+              <span>Available Practitioners Currently On-Duty</span>
+              <strong class="text-success" style="font-size: 1.1rem;">${userCounts.currently_available_doctors || 0}</strong>
+            </div>
+          </div>
+        `;
+
+        // 4. Workload Table
+        const workloads = data.doctor_workloads || [];
+        const workloadContainer = document.getElementById('workloadTableContainer');
+        if (workloads.length === 0) {
+          workloadContainer.innerHTML = `<div class="empty-state"><p>No consultation activity recorded in this time window.</p></div>`;
+        } else {
+          workloadContainer.innerHTML = `
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Doctor Name</th>
+                    <th>Specialization</th>
+                    <th style="text-align: right;">Total Consultations</th>
+                    <th style="text-align: right;">Completed</th>
+                    <th style="text-align: right;">Cancelled</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${workloads.map(doc => `
+                    <tr>
+                      <td style="font-weight: 600;">Dr. ${escapeHtml(doc.name)}</td>
+                      <td><span class="badge badge-neutral">${escapeHtml(doc.specialization)}</span></td>
+                      <td style="text-align: right; font-weight: 700; color: var(--color-primary);">${doc.total_consultations}</td>
+                      <td style="text-align: right; color: var(--color-success); font-weight: 600;">${doc.completed}</td>
+                      <td style="text-align: right; color: var(--color-danger); font-weight: 600;">${doc.cancelled}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+
+      } catch (err) {
+        showToast('Failed to load analytical metrics: ' + (err.message || 'Server error'), 'error');
+        document.getElementById('apptsBreakdownContainer').innerHTML = `<p class="text-danger">Failed to load analytics.</p>`;
+        document.getElementById('clinicalVolumesContainer').innerHTML = `<p class="text-danger">Failed to load volumes.</p>`;
+        document.getElementById('workloadTableContainer').innerHTML = `<p class="text-danger">Failed to load workloads.</p>`;
+      }
+    }
+  </script>
+</body>
+</html>

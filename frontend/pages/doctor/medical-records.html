@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clinical Records — Doctor Portal — VakCare</title>
+  <meta name="description" content="Create and review patient clinical notes, diagnoses, and lab results.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app-main">
+      <div class="app-content">
+        <!-- Toolbar -->
+        <div class="action-toolbar">
+          <div class="filter-group">
+            <select id="recordTypeFilter" class="form-select" style="width: auto; min-width: 200px;">
+              <option value="">All Record Types</option>
+              <option value="CONSULTATION_NOTE">Consultation Note</option>
+              <option value="DIAGNOSIS">Clinical Diagnosis</option>
+              <option value="LAB_RESULT">Laboratory Result</option>
+              <option value="DISCHARGE_SUMMARY">Discharge Summary</option>
+              <option value="VACCINATION">Vaccination Record</option>
+              <option value="OTHER">Other Clinical Note</option>
+            </select>
+          </div>
+
+          <button id="openNewRecordModalBtn" class="btn btn-primary btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            Create Clinical Record
+          </button>
+        </div>
+
+        <!-- Records Table -->
+        <div class="card">
+          <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="border: none; box-shadow: none;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Record ID</th>
+                    <th>Patient Name</th>
+                    <th>Title & Diagnostic Summary</th>
+                    <th>Record Type</th>
+                    <th>Date Recorded</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="recordsTableBody">
+                  <tr>
+                    <td colspan="6" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Medical Record Modal -->
+  <div class="modal-backdrop" id="newRecordModal">
+    <div class="modal-dialog" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 class="card-title">Create Clinical Record</h3>
+        <button class="btn-icon" id="closeNewRecordModal" aria-label="Close dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="newRecordForm" novalidate>
+        <div class="modal-body">
+          <div id="recordModalAlert" class="auth-alert auth-alert-error hidden"></div>
+
+          <div class="form-group">
+            <label class="form-label" for="selectPatient">
+              Select Patient <span class="required-indicator">*</span>
+            </label>
+            <select id="selectPatient" name="patient_id" class="form-select" required>
+              <option value="">Choose patient...</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label" for="recordType">Record Type <span class="required-indicator">*</span></label>
+              <select id="recordType" name="record_type" class="form-select" required>
+                <option value="CONSULTATION_NOTE">Consultation Note</option>
+                <option value="DIAGNOSIS">Clinical Diagnosis</option>
+                <option value="LAB_RESULT">Laboratory Result</option>
+                <option value="DISCHARGE_SUMMARY">Discharge Summary</option>
+                <option value="VACCINATION">Vaccination Record</option>
+                <option value="OTHER">Other Clinical Note</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="recordTitle">Title / Diagnosis <span class="required-indicator">*</span></label>
+              <input type="text" id="recordTitle" name="title" class="form-control" placeholder="e.g. Acute Bronchitis" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="recordDesc">Clinical Findings & Notes <span class="required-indicator">*</span></label>
+            <textarea id="recordDesc" name="description" class="form-textarea" placeholder="Detailed clinical evaluation, symptoms observed, diagnostic rationale..." required></textarea>
+          </div>
+
+          <!-- Structured Clinical Vitals -->
+          <div style="background-color: var(--color-bg-subtle); padding: var(--space-4); border-radius: var(--radius-md);">
+            <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: var(--space-3); color: var(--color-text-main);">
+              Observed Vitals (Optional)
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="form-label" style="font-size: 0.75rem;" for="vitalBP">Blood Pressure</label>
+                <input type="text" id="vitalBP" class="form-control" placeholder="120/80">
+              </div>
+              <div>
+                <label class="form-label" style="font-size: 0.75rem;" for="vitalPulse">Pulse (BPM)</label>
+                <input type="number" id="vitalPulse" class="form-control" placeholder="72">
+              </div>
+              <div>
+                <label class="form-label" style="font-size: 0.75rem;" for="vitalTemp">Temp (°F)</label>
+                <input type="text" id="vitalTemp" class="form-control" placeholder="98.6">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="dismissNewRecordBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveRecordSubmitBtn">
+            <span id="saveRecordBtnText">Save Clinical Record</span>
+            <span id="saveRecordSpinner" class="spinner hidden" style="border-top-color: white;"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Medical Record Details Modal -->
+  <div class="modal-backdrop" id="viewRecordModal">
+    <div class="modal-dialog" style="max-width: 600px;">
+      <div class="modal-header">
+        <div>
+          <h3 class="card-title" id="viewModalTitle">Clinical Record Details</h3>
+          <span style="font-size: 0.8rem; color: var(--color-text-subtle);" id="viewModalMeta"></span>
+        </div>
+        <button class="btn-icon" id="closeViewRecordModal" aria-label="Close dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body flex flex-col gap-4">
+        <div>
+          <div class="flex items-center gap-2" style="margin-bottom: 6px;">
+            <span class="badge badge-neutral" id="viewModalType"></span>
+            <span style="font-size: 0.8rem; color: var(--color-text-subtle);" id="viewModalDate"></span>
+          </div>
+          <h4 id="viewModalDiagnosis" style="margin: 0; font-size: 1.1rem; color: var(--color-text-main);"></h4>
+        </div>
+
+        <div style="background-color: var(--color-bg-subtle); padding: var(--space-4); border-radius: var(--radius-md);">
+          <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: 6px;">
+            Clinical Findings & Notes
+          </div>
+          <p id="viewModalDesc" style="white-space: pre-wrap; margin: 0; font-size: 0.9rem; line-height: 1.6; color: var(--color-text-main);"></p>
+        </div>
+
+        <div id="viewModalClinicalDataBox" class="hidden" style="background-color: var(--color-bg-subtle); padding: var(--space-4); border-radius: var(--radius-md);">
+          <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: 6px;">
+            Recorded Vitals & Data
+          </div>
+          <pre id="viewModalClinicalData" style="margin: 0; font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text-main); white-space: pre-wrap;"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="closeViewRecordBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Auth } from '../../js/auth.js';
+    import { api } from '../../js/api-client.js';
+    import { initAppLayout } from '../../js/components.js';
+    import { Validation } from '../../js/validation.js';
+    import { formatDate, escapeHtml, renderEmptyState, showToast } from '../../js/ui.js';
+
+    const user = await Auth.guardRoute(['DOCTOR', 'ADMIN']);
+    if (!user) throw new Error('Unauthorized');
+
+    await initAppLayout({
+      title: 'Clinical EHR Records',
+      subtitle: 'Author electronic medical records, clinical notes, and diagnostic observations',
+    });
+
+    const typeFilter = document.getElementById('recordTypeFilter');
+    typeFilter.addEventListener('change', loadRecords);
+
+    loadRecords();
+    populatePatientsDropdown();
+
+    async function loadRecords() {
+      const tbody = document.getElementById('recordsTableBody');
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td></tr>`;
+
+      const params = {};
+      if (typeFilter.value) params.record_type = typeFilter.value;
+
+      try {
+        const res = await api.get('/medical-records/', params);
+        const records = res.results || [];
+
+        if (records.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6">
+                ${renderEmptyState({
+                  title: 'No Clinical Records',
+                  message: 'No records match your selected criteria.',
+                  actionText: 'Create First Record',
+                  actionId: 'emptyCreateBtn',
+                })}
+              </td>
+            </tr>
+          `;
+          const emptyCreate = document.getElementById('emptyCreateBtn');
+          if (emptyCreate) emptyCreate.onclick = openNewModal;
+          return;
+        }
+
+        tbody.innerHTML = records.map(r => `
+          <tr>
+            <td><span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text-subtle);">#REC-${r.id}</span></td>
+            <td>
+              <strong>${escapeHtml(r.patient_name || `Patient #${r.patient}`)}</strong>
+            </td>
+            <td>
+              <div style="font-weight: 600;">${escapeHtml(r.title)}</div>
+              <div style="font-size: 0.75rem; color: var(--color-text-muted); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${escapeHtml(r.description)}
+              </div>
+            </td>
+            <td><span class="badge badge-neutral">${escapeHtml(r.record_type_display || r.record_type)}</span></td>
+            <td>${formatDate(r.created_at)}</td>
+            <td>
+              <button class="btn btn-outline btn-sm view-btn" data-record='${JSON.stringify(r)}'>
+                Details
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        tbody.querySelectorAll('.view-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const r = JSON.parse(btn.dataset.record);
+            openViewModal(r);
+          });
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-danger text-center">Failed to load medical records: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    // View Record Modal Handling
+    const viewModal = document.getElementById('viewRecordModal');
+    function openViewModal(r) {
+      document.getElementById('viewModalTitle').textContent = `Clinical Record #${r.id}`;
+      document.getElementById('viewModalMeta').textContent = `Patient: ${r.patient_name || 'Patient'} • Attending: Dr. ${r.doctor_name || 'Specialist'}`;
+      document.getElementById('viewModalType').textContent = r.record_type_display || r.record_type;
+      document.getElementById('viewModalDate').textContent = formatDate(r.created_at);
+      document.getElementById('viewModalDiagnosis').textContent = r.title;
+      document.getElementById('viewModalDesc').textContent = r.description;
+
+      const vDataBox = document.getElementById('viewModalClinicalDataBox');
+      if (r.clinical_data && Object.keys(r.clinical_data).length > 0) {
+        document.getElementById('viewModalClinicalData').textContent = JSON.stringify(r.clinical_data, null, 2);
+        vDataBox.classList.remove('hidden');
+      } else {
+        vDataBox.classList.add('hidden');
+      }
+
+      viewModal.classList.add('active');
+    }
+
+    function closeViewModal() {
+      viewModal.classList.remove('active');
+    }
+
+    document.getElementById('closeViewRecordModal').onclick = closeViewModal;
+    document.getElementById('closeViewRecordBtn').onclick = closeViewModal;
+
+    async function populatePatientsDropdown() {
+      try {
+        const res = await api.get('/patients/', { page_size: 50 });
+        const list = res.results || [];
+        const select = document.getElementById('selectPatient');
+        list.forEach(p => {
+          const u = p.user || {};
+          const name = u.first_name ? `${u.first_name} ${u.last_name}` : u.username;
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = `${name} (PAT-${p.id} - ${u.email})`;
+          select.appendChild(opt);
+        });
+      } catch {}
+    }
+
+    // Modal Handling
+    const modal = document.getElementById('newRecordModal');
+    const modalAlert = document.getElementById('recordModalAlert');
+    const form = document.getElementById('newRecordForm');
+
+    function openNewModal() {
+      form.reset();
+      modalAlert.classList.add('hidden');
+      Validation.clearFieldErrors(form);
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+    }
+
+    document.getElementById('openNewRecordModalBtn').onclick = openNewModal;
+    document.getElementById('closeNewRecordModal').onclick = closeModal;
+    document.getElementById('dismissNewRecordBtn').onclick = closeModal;
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeModal();
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      modalAlert.classList.add('hidden');
+      Validation.clearFieldErrors(form);
+
+      const patientId = parseInt(document.getElementById('selectPatient').value, 10);
+      const recordType = document.getElementById('recordType').value;
+      const title = document.getElementById('recordTitle').value.trim();
+      const description = document.getElementById('recordDesc').value.trim();
+
+      let hasError = false;
+      if (!patientId) {
+        Validation.setFieldError(document.getElementById('selectPatient'), 'Please select a patient.');
+        hasError = true;
+      }
+      if (!title) {
+        Validation.setFieldError(document.getElementById('recordTitle'), 'Please enter a record title/diagnosis.');
+        hasError = true;
+      }
+      if (!description) {
+        Validation.setFieldError(document.getElementById('recordDesc'), 'Please enter clinical findings and notes.');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      const submitBtn = document.getElementById('saveRecordSubmitBtn');
+      const btnText = document.getElementById('saveRecordBtnText');
+      const spinner = document.getElementById('saveRecordSpinner');
+
+      submitBtn.disabled = true;
+      btnText.textContent = 'Recording...';
+      spinner.classList.remove('hidden');
+
+      const clinicalData = {};
+      const bp = document.getElementById('vitalBP').value.trim();
+      const pulse = document.getElementById('vitalPulse').value.trim();
+      const temp = document.getElementById('vitalTemp').value.trim();
+      if (bp) clinicalData.blood_pressure = bp;
+      if (pulse) clinicalData.pulse = pulse;
+      if (temp) clinicalData.temperature = temp;
+
+      try {
+        await api.post('/medical-records/', {
+          patient_id: patientId,
+          record_type: recordType,
+          title: title,
+          description: description,
+          clinical_data: clinicalData,
+        });
+
+        showToast('Clinical record saved successfully!', 'success');
+        closeModal();
+        loadRecords();
+      } catch (err) {
+        modalAlert.textContent = err.message || 'Failed to record medical findings.';
+        modalAlert.classList.remove('hidden');
+        if (err.details) {
+          Validation.applyServerErrors(form, err.details);
+        }
+      } finally {
+        submitBtn.disabled = false;
+        btnText.textContent = 'Save Clinical Record';
+        spinner.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

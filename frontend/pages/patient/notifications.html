@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications & Alerts — VakCare</title>
+  <meta name="description" content="View clinical and appointment notifications and alerts.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app-main">
+      <div class="app-content" style="max-width: 860px;">
+        <!-- Action Toolbar -->
+        <div class="action-toolbar">
+          <div class="filter-group">
+            <select id="unreadFilter" class="form-select" style="width: auto;">
+              <option value="">All Notifications</option>
+              <option value="true" selected>Unread Only</option>
+            </select>
+          </div>
+
+          <button id="markAllReadBtn" class="btn btn-outline btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Mark All as Read
+          </button>
+        </div>
+
+        <!-- Notifications Container -->
+        <div id="notificationsList" class="flex flex-col gap-3">
+          <div class="text-center" style="padding: 3rem;"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { Auth } from '../../js/auth.js';
+    import { api } from '../../js/api-client.js';
+    import { initAppLayout } from '../../js/components.js';
+    import { formatDate, formatTime, escapeHtml, renderEmptyState, showToast } from '../../js/ui.js';
+
+    const user = await Auth.guardRoute(['PATIENT', 'DOCTOR', 'ADMIN']);
+    if (!user) throw new Error('Unauthorized');
+
+    await initAppLayout({
+      title: 'Notification Center',
+      subtitle: 'In-app reminders, consultation updates, and prescription notices',
+    });
+
+    const unreadFilter = document.getElementById('unreadFilter');
+    unreadFilter.addEventListener('change', loadNotifications);
+
+    document.getElementById('markAllReadBtn').addEventListener('click', async () => {
+      try {
+        await api.post('/notifications/mark-all-read/');
+        showToast('All notifications marked as read.', 'success');
+        loadNotifications();
+      } catch (err) {
+        showToast('Failed to mark all as read.', 'error');
+      }
+    });
+
+    loadNotifications();
+
+    async function loadNotifications() {
+      const container = document.getElementById('notificationsList');
+      container.innerHTML = `<div class="text-center" style="padding: 3rem;"><div class="spinner"></div></div>`;
+
+      const params = {};
+      if (unreadFilter.value === 'true') params.unread = 'true';
+
+      try {
+        const res = await api.get('/notifications/', params);
+        const list = res.results || [];
+
+        if (list.length === 0) {
+          container.innerHTML = renderEmptyState({
+            title: 'No Notifications Found',
+            message: unreadFilter.value === 'true' ? 'You have no unread notifications right now.' : 'You have not received any notifications yet.',
+          });
+          return;
+        }
+
+        container.innerHTML = list.map(n => `
+          <div class="card" style="padding: var(--space-4) var(--space-5); border-left: 4px solid ${n.is_read ? 'var(--color-bg-muted)' : 'var(--color-primary)'}; background-color: ${n.is_read ? 'var(--color-bg-surface)' : 'var(--color-primary-subtle)'};">
+            <div class="flex justify-between items-start gap-3">
+              <div class="flex-1">
+                <div class="flex items-center gap-2" style="margin-bottom: 4px;">
+                  <span class="badge ${n.is_read ? 'badge-neutral' : 'badge-confirmed'}">${escapeHtml(n.notification_type_display || n.notification_type)}</span>
+                  <span style="font-size: 0.75rem; color: var(--color-text-subtle);">${formatDate(n.created_at)} at ${formatTime(n.created_at.split('T')[1] || '')}</span>
+                </div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--color-text-main); margin-bottom: 4px;">${escapeHtml(n.title)}</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.5;">${escapeHtml(n.message)}</p>
+              </div>
+
+              ${!n.is_read ? `
+                <button class="btn btn-outline btn-sm mark-read-btn" data-id="${n.id}">
+                  Mark Read
+                </button>
+              ` : `
+                <span style="font-size: 0.75rem; color: var(--color-text-subtle);">Read</span>
+              `}
+            </div>
+          </div>
+        `).join('');
+
+        container.querySelectorAll('.mark-read-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            try {
+              await api.patch(`/notifications/${btn.dataset.id}/read/`);
+              showToast('Marked as read.', 'info');
+              loadNotifications();
+            } catch (err) {
+              showToast('Failed to mark notification as read.', 'error');
+            }
+          });
+        });
+      } catch (err) {
+        container.innerHTML = `<div class="alert alert-danger">Failed to load notifications: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>

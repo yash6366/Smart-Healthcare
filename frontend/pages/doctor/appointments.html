@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Consultations Management — VakCare</title>
+  <meta name="description" content="Review assigned patient consultations and manage appointment states.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app-main">
+      <div class="app-content">
+        <!-- Daily Schedule Panel -->
+        <div class="card" style="margin-bottom: var(--space-6);">
+          <div class="card-header" style="flex-wrap: wrap; gap: var(--space-3);">
+            <div>
+              <h2 class="card-title">Practitioner Daily Schedule</h2>
+              <span style="font-size: 0.8rem; color: var(--color-text-muted);">
+                Consultations and active clinical slots for <strong id="scheduleDateLabel">Today</strong>
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="date" id="scheduleDateInput" class="form-control" style="width: auto; font-size: 0.8rem;">
+              <button type="button" id="todayScheduleBtn" class="btn btn-outline btn-sm">Today</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Schedule KPIs -->
+            <div class="flex items-center gap-4 flex-wrap" style="margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--color-bg-muted);" id="scheduleKpis">
+              <div style="font-size: 0.85rem;"><span style="color: var(--color-text-muted);">Slots:</span> <strong id="kpiTotal">0</strong></div>
+              <div style="font-size: 0.85rem;"><span style="color: var(--color-text-muted);">Confirmed:</span> <strong class="text-success" id="kpiConfirmed">0</strong></div>
+              <div style="font-size: 0.85rem;"><span style="color: var(--color-text-muted);">Pending:</span> <strong class="text-warning" id="kpiPending">0</strong></div>
+              <div style="font-size: 0.85rem;"><span style="color: var(--color-text-muted);">Completed:</span> <strong class="text-info" id="kpiCompleted">0</strong></div>
+            </div>
+            <!-- Slots List -->
+            <div id="scheduleSlotsContainer">
+              <div class="text-center" style="padding: 1rem;"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Toolbar -->
+        <div class="action-toolbar">
+          <div class="filter-group">
+            <select id="statusFilter" class="form-select" style="width: auto; min-width: 180px;">
+              <option value="">All Statuses</option>
+              <option value="PENDING">Pending Confirmation</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="CANCELLED">Cancelled</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+
+            <input type="date" id="dateFilter" class="form-control" style="width: auto;" title="Filter by date">
+            <button id="resetFilterBtn" class="btn btn-outline btn-sm">Reset Filters</button>
+          </div>
+        </div>
+
+        <!-- Appointments Table Card -->
+        <div class="card">
+          <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="border: none; box-shadow: none;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Patient</th>
+                    <th>Slot Date & Time</th>
+                    <th>Duration</th>
+                    <th>Symptoms / Reason</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="doctorApptsTableBody">
+                  <tr>
+                    <td colspan="7" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Rejection / Reason Modal -->
+  <div class="modal-backdrop" id="decisionModal">
+    <div class="modal-dialog" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="card-title" id="decisionModalTitle">Appointment Decision</h3>
+        <button class="btn-icon" id="closeDecisionModal" aria-label="Close dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p id="decisionModalNotice" style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: var(--space-4);">
+          Please explain the reason for this action.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label" for="decisionReasonInput">Clinical / Scheduling Reason</label>
+          <textarea id="decisionReasonInput" class="form-textarea" placeholder="State reason..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="decisionModalCancelBtn">Dismiss</button>
+        <button type="button" class="btn btn-primary" id="confirmDecisionBtn">Confirm Action</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Auth } from '../../js/auth.js';
+    import { api } from '../../js/api-client.js';
+    import { initAppLayout } from '../../js/components.js';
+    import { formatDate, formatTime, renderStatusBadge, renderEmptyState, escapeHtml, showToast, showConfirmDialog } from '../../js/ui.js';
+
+    const user = await Auth.guardRoute(['DOCTOR', 'ADMIN']);
+    if (!user) throw new Error('Unauthorized');
+
+    await initAppLayout({
+      title: 'Consultations Management',
+      subtitle: 'Manage patient consultations, confirm pending slots, or mark appointments completed',
+    });
+
+    const statusFilter = document.getElementById('statusFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const resetBtn = document.getElementById('resetFilterBtn');
+    const scheduleDateInput = document.getElementById('scheduleDateInput');
+    const scheduleDateLabel = document.getElementById('scheduleDateLabel');
+    const todayScheduleBtn = document.getElementById('todayScheduleBtn');
+
+    todayScheduleBtn.addEventListener('click', () => {
+      scheduleDateInput.value = '';
+      loadDailySchedule();
+    });
+    scheduleDateInput.addEventListener('change', () => {
+      loadDailySchedule(scheduleDateInput.value);
+    });
+
+    statusFilter.addEventListener('change', loadConsultations);
+    dateFilter.addEventListener('change', loadConsultations);
+    resetBtn.addEventListener('click', () => {
+      statusFilter.value = '';
+      dateFilter.value = '';
+      loadConsultations();
+    });
+
+    loadDailySchedule();
+    loadConsultations();
+
+    async function loadDailySchedule(targetDate = '') {
+      const container = document.getElementById('scheduleSlotsContainer');
+      container.innerHTML = '<div class="text-center" style="padding: 1rem;"><div class="spinner"></div></div>';
+      try {
+        const params = {};
+        if (targetDate) params.date = targetDate;
+        const res = await api.get('/appointments/daily-schedule/', params);
+
+        scheduleDateLabel.textContent = res.date;
+        document.getElementById('kpiTotal').textContent = res.kpis?.total_slots || 0;
+        document.getElementById('kpiConfirmed').textContent = res.kpis?.CONFIRMED || 0;
+        document.getElementById('kpiPending').textContent = res.kpis?.PENDING || 0;
+        document.getElementById('kpiCompleted').textContent = res.kpis?.COMPLETED || 0;
+
+        const slots = res.schedule || [];
+        if (slots.length === 0) {
+          container.innerHTML = `
+            <div style="font-size: 0.85rem; color: var(--color-text-muted); text-align: center; padding: 1rem 0;">
+              No consultations scheduled for this date.
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = `
+          <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+            ${slots.map(s => `
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background-color: var(--color-bg-subtle); flex-wrap: wrap; gap: 8px;">
+                <div class="flex items-center gap-3">
+                  <span style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; min-width: 90px;">${formatTime(s.start_time)}</span>
+                  <div>
+                    <strong style="font-size: 0.9rem;">${escapeHtml(s.patient.name)}</strong>
+                    <span style="font-size: 0.75rem; color: var(--color-text-muted); margin-left: 6px;">(${s.duration_minutes}m) — ${escapeHtml(s.reason)}</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  ${renderStatusBadge(s.status)}
+                  <a href="prescriptions.html" class="btn btn-ghost btn-sm" style="font-size: 0.75rem; padding: 2px 8px;">Rx</a>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div class="text-danger" style="font-size: 0.8rem; padding: 0.5rem 0;">Failed to load daily schedule: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    async function loadConsultations() {
+      const tbody = document.getElementById('doctorApptsTableBody');
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td></tr>`;
+
+      const params = {};
+      if (statusFilter.value) params.status = statusFilter.value;
+      if (dateFilter.value) params.date = dateFilter.value;
+
+      try {
+        const res = await api.get('/appointments/', params);
+        const list = res.results || [];
+
+        if (list.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7">
+                ${renderEmptyState({
+                  title: 'No Consultations Found',
+                  message: 'No patient appointments match the selected filter criteria.',
+                })}
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = list.map(a => {
+          let actionsHtml = `<span style="font-size: 0.75rem; color: var(--color-text-subtle);">Terminal State</span>`;
+
+          if (a.status === 'PENDING') {
+            actionsHtml = `
+              <div class="flex gap-2">
+                <button class="btn btn-primary btn-sm confirm-btn" data-id="${a.id}">Confirm</button>
+                <button class="btn btn-outline btn-sm text-danger reject-btn" data-id="${a.id}">Reject</button>
+              </div>
+            `;
+          } else if (a.status === 'CONFIRMED') {
+            actionsHtml = `
+              <div class="flex gap-2">
+                <button class="btn btn-outline btn-sm text-success complete-btn" data-id="${a.id}">Complete</button>
+                <button class="btn btn-ghost btn-sm text-danger cancel-btn" data-id="${a.id}">Cancel</button>
+              </div>
+            `;
+          }
+
+          return `
+            <tr>
+              <td><span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text-subtle);">#${a.id}</span></td>
+              <td>
+                <div class="flex items-center gap-3">
+                  <div class="avatar" style="width: 32px; height: 32px; font-size: 0.75rem;">
+                    ${escapeHtml((a.patient?.user?.first_name?.[0] || 'P').toUpperCase())}
+                  </div>
+                  <div>
+                    <strong>${escapeHtml(a.patient?.user?.first_name ? `${a.patient.user.first_name} ${a.patient.user.last_name}` : a.patient?.user?.username || 'Patient')}</strong>
+                    <div style="font-size: 0.75rem; color: var(--color-text-subtle);">${escapeHtml(a.patient?.user?.phone_number || a.patient?.user?.email || '')}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div style="font-weight: 500;">${formatDate(a.appointment_date)}</div>
+                <div style="font-size: 0.75rem; color: var(--color-text-subtle);">${formatTime(a.start_time)}</div>
+              </td>
+              <td>${a.duration_minutes} min</td>
+              <td style="max-width: 240px;">
+                <div style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(a.reason)}">
+                  ${escapeHtml(a.reason)}
+                </div>
+                ${a.cancellation_reason ? `<div style="font-size: 0.75rem; color: var(--color-danger); margin-top: 2px;">Reason: ${escapeHtml(a.cancellation_reason)}</div>` : ''}
+              </td>
+              <td>${renderStatusBadge(a.status)}</td>
+              <td>${actionsHtml}</td>
+            </tr>
+          `;
+        }).join('');
+
+        // Confirm
+        tbody.querySelectorAll('.confirm-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            try {
+              await api.post(`/appointments/${btn.dataset.id}/confirm/`);
+              showToast('Appointment confirmed!', 'success');
+              loadConsultations();
+            } catch (err) {
+              showToast(err.message || 'Failed to confirm.', 'error');
+            }
+          });
+        });
+
+        // Complete
+        tbody.querySelectorAll('.complete-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const confirmed = await showConfirmDialog({
+              title: 'Mark Completed',
+              message: 'Confirm that this consultation has been conducted and completed?',
+              confirmText: 'Mark Completed',
+            });
+            if (confirmed) {
+              try {
+                await api.post(`/appointments/${btn.dataset.id}/complete/`);
+                showToast('Appointment marked as completed.', 'success');
+                loadConsultations();
+              } catch (err) {
+                showToast(err.message || 'Failed to complete.', 'error');
+              }
+            }
+          });
+        });
+
+        // Reject (with modal)
+        tbody.querySelectorAll('.reject-btn').forEach(btn => {
+          btn.addEventListener('click', () => openDecisionModal('reject', btn.dataset.id));
+        });
+
+        // Cancel (with modal)
+        tbody.querySelectorAll('.cancel-btn').forEach(btn => {
+          btn.addEventListener('click', () => openDecisionModal('cancel', btn.dataset.id));
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-danger text-center">Failed to load consultations: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    // Modal Handling for Reject / Cancel
+    const modal = document.getElementById('decisionModal');
+    let activeAction = null;
+    let activeId = null;
+
+    function openDecisionModal(action, id) {
+      activeAction = action;
+      activeId = id;
+
+      const title = document.getElementById('decisionModalTitle');
+      const notice = document.getElementById('decisionModalNotice');
+      const confirmBtn = document.getElementById('confirmDecisionBtn');
+
+      if (action === 'reject') {
+        title.textContent = 'Reject Consultation Request';
+        notice.textContent = 'Please state why this appointment request cannot be accommodated:';
+        confirmBtn.className = 'btn btn-danger';
+        confirmBtn.textContent = 'Reject Request';
+      } else {
+        title.textContent = 'Cancel Confirmed Consultation';
+        notice.textContent = 'Please provide reason for cancelling this confirmed appointment:';
+        confirmBtn.className = 'btn btn-danger';
+        confirmBtn.textContent = 'Cancel Appointment';
+      }
+
+      document.getElementById('decisionReasonInput').value = '';
+      modal.classList.add('active');
+    }
+
+    function closeDecisionModal() {
+      modal.classList.remove('active');
+      activeAction = null;
+      activeId = null;
+    }
+
+    document.getElementById('closeDecisionModal').onclick = closeDecisionModal;
+    document.getElementById('decisionModalCancelBtn').onclick = closeDecisionModal;
+
+    document.getElementById('confirmDecisionBtn').addEventListener('click', async () => {
+      if (!activeId || !activeAction) return;
+
+      const reason = document.getElementById('decisionReasonInput').value.trim();
+      try {
+        if (activeAction === 'reject') {
+          await api.post(`/appointments/${activeId}/reject/`, { reason });
+          showToast('Appointment request rejected.', 'info');
+        } else {
+          await api.post(`/appointments/${activeId}/cancel/`, { cancellation_reason: reason });
+          showToast('Appointment cancelled.', 'info');
+        }
+        closeDecisionModal();
+        loadConsultations();
+      } catch (err) {
+        showToast(err.message || 'Operation failed.', 'error');
+      }
+    });
+  </script>
+</body>
+</html>

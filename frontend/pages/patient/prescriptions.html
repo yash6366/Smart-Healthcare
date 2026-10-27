@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Prescriptions — VakCare</title>
+  <meta name="description" content="Access and review verified doctor prescriptions and medication dosages.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app-main">
+      <div class="app-content">
+        <!-- Toolbar Filters -->
+        <div class="action-toolbar">
+          <div class="filter-group">
+            <select id="statusFilter" class="form-select" style="width: auto; min-width: 180px;">
+              <option value="">All Prescriptions</option>
+              <option value="ACTIVE" selected>Active Prescriptions</option>
+              <option value="COMPLETED">Completed Courses</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Prescriptions Table Card -->
+        <div class="card">
+          <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="border: none; box-shadow: none;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Prescription #</th>
+                    <th>Diagnosis</th>
+                    <th>Prescribing Doctor</th>
+                    <th>Issued Date</th>
+                    <th>Medications</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="prescriptionsTableBody">
+                  <tr>
+                    <td colspan="7" class="text-center" style="padding: 2.5rem;">
+                      <div class="spinner"></div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Prescription Detail Modal -->
+  <div class="modal-backdrop" id="prescriptionModal">
+    <div class="modal-dialog" style="max-width: 680px;">
+      <div class="modal-header">
+        <div>
+          <h3 class="card-title" id="modalPrescriptionTitle">Prescription Details</h3>
+          <span style="font-size: 0.8rem; color: var(--color-text-muted);" id="modalDoctorName">Dr. Specialist</span>
+        </div>
+        <button class="btn-icon" id="closeModalBtn" aria-label="Close dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: var(--space-5);">
+        <!-- Summary Info Grid -->
+        <div class="grid grid-cols-2 gap-4" style="background-color: var(--color-bg-subtle); padding: var(--space-4); border-radius: var(--radius-md);">
+          <div>
+            <span style="font-size: 0.75rem; color: var(--color-text-subtle); text-transform: uppercase;">Diagnosis</span>
+            <div style="font-weight: 600;" id="modalDiagnosis">—</div>
+          </div>
+          <div>
+            <span style="font-size: 0.75rem; color: var(--color-text-subtle); text-transform: uppercase;">Issued Date</span>
+            <div style="font-weight: 600;" id="modalIssuedAt">—</div>
+          </div>
+        </div>
+
+        <div id="notesContainer">
+          <h4 style="font-size: 0.95rem; margin-bottom: var(--space-2);">Physician Advice & Dietary Instructions</h4>
+          <div id="modalNotes" style="font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.5; background: #fff; border: 1px solid var(--color-bg-muted); padding: var(--space-3); border-radius: var(--radius-md);"></div>
+        </div>
+
+        <!-- Medication Items Table -->
+        <div>
+          <h4 style="font-size: 0.95rem; margin-bottom: var(--space-3);">Prescribed Medications</h4>
+          <div class="table-container" style="box-shadow: none;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Medication</th>
+                  <th>Dosage</th>
+                  <th>Frequency</th>
+                  <th>Duration</th>
+                  <th>Instructions</th>
+                </tr>
+              </thead>
+              <tbody id="medicationItemsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="printPrescriptionBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+          Print Prescription
+        </button>
+        <button class="btn btn-primary" id="closeModalFooterBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Auth } from '../../js/auth.js';
+    import { api } from '../../js/api-client.js';
+    import { initAppLayout } from '../../js/components.js';
+    import { formatDate, escapeHtml, renderStatusBadge, renderEmptyState } from '../../js/ui.js';
+
+    const user = await Auth.guardRoute(['PATIENT', 'ADMIN']);
+    if (!user) throw new Error('Unauthorized');
+
+    await initAppLayout({
+      title: 'Digital Prescriptions',
+      subtitle: 'Doctor-issued medication instructions and active treatment plans',
+    });
+
+    const statusFilter = document.getElementById('statusFilter');
+    statusFilter.addEventListener('change', loadPrescriptions);
+
+    loadPrescriptions();
+
+    async function loadPrescriptions() {
+      const tbody = document.getElementById('prescriptionsTableBody');
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td></tr>`;
+
+      const params = {};
+      const status = statusFilter.value;
+      if (status) params.status = status;
+
+      try {
+        const res = await api.get('/prescriptions/', params);
+        const prescs = res.results || [];
+
+        if (prescs.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7">
+                ${renderEmptyState({
+                  title: 'No Prescriptions Found',
+                  message: status ? `No prescriptions with status "${status}".` : 'You do not have any prescriptions recorded.',
+                })}
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = prescs.map(p => `
+          <tr>
+            <td><span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text-subtle);">#RX-${p.id}</span></td>
+            <td>
+              <strong>${escapeHtml(p.diagnosis)}</strong>
+            </td>
+            <td>Dr. ${escapeHtml(p.doctor?.display_name || 'Specialist')}</td>
+            <td>${formatDate(p.issued_at || p.created_at)}</td>
+            <td>
+              <span class="badge badge-neutral">${p.items?.length || 0} items</span>
+            </td>
+            <td>${renderStatusBadge(p.status)}</td>
+            <td>
+              <button class="btn btn-outline btn-sm view-presc-btn" data-presc='${JSON.stringify(p)}'>
+                View Details
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        tbody.querySelectorAll('.view-presc-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const p = JSON.parse(btn.dataset.presc);
+            openPrescriptionModal(p);
+          });
+        });
+      } catch (err) {
+        tbody.innerHTML = `
+          <tr><td colspan="7" class="text-danger text-center" style="padding: 2rem;">Failed to load prescriptions: ${escapeHtml(err.message)}</td></tr>
+        `;
+      }
+    }
+
+    // Modal Handling
+    const modal = document.getElementById('prescriptionModal');
+
+    function openPrescriptionModal(p) {
+      document.getElementById('modalPrescriptionTitle').textContent = `Prescription #RX-${p.id}`;
+      document.getElementById('modalDoctorName').textContent = `Prescribed by Dr. ${p.doctor?.display_name || 'Specialist'}`;
+      document.getElementById('modalDiagnosis').textContent = p.diagnosis;
+      document.getElementById('modalIssuedAt').textContent = formatDate(p.issued_at || p.created_at);
+      document.getElementById('modalNotes').textContent = p.notes || 'No specific dietary restrictions specified.';
+
+      const itemsTbody = document.getElementById('medicationItemsTable');
+      if (p.items && p.items.length > 0) {
+        itemsTbody.innerHTML = p.items.map(item => `
+          <tr>
+            <td><strong>${escapeHtml(item.medication_name)}</strong></td>
+            <td>${escapeHtml(item.dosage)}</td>
+            <td>${escapeHtml(item.frequency)}</td>
+            <td>${escapeHtml(item.duration)}</td>
+            <td style="font-size: 0.8rem; color: var(--color-text-muted);">${escapeHtml(item.instructions || '—')}</td>
+          </tr>
+        `).join('');
+      } else {
+        itemsTbody.innerHTML = `<tr><td colspan="5" class="text-center">No itemized medications.</td></tr>`;
+      }
+
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+    }
+
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    document.getElementById('closeModalFooterBtn').onclick = closeModal;
+    document.getElementById('printPrescriptionBtn').onclick = () => window.print();
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>

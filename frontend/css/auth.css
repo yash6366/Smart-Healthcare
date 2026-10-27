@@ -1,0 +1,162 @@
+/* ==========================================================================
+   VakCare Authentication Styles (Login & Registration)
+   ========================================================================== */
+
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  background-color: var(--color-bg-app);
+}
+
+.auth-sidebar-panel {
+  flex: 1;
+  background: linear-gradient(135deg, #094e48 0%, #0d5f58 50%, #0369a1 100%);
+  color: white;
+  padding: var(--space-12);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-sidebar-panel::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  right: -20%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.25) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.auth-panel-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  z-index: var(--z-base);
+}
+
+.auth-panel-brand .brand-logo {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.auth-panel-brand .brand-name {
+  color: white;
+}
+
+.auth-panel-quote {
+  z-index: var(--z-base);
+  max-width: 480px;
+}
+
+.auth-panel-quote h2 {
+  color: white;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: 1.3;
+  margin-bottom: var(--space-4);
+}
+
+.auth-panel-quote p {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+
+.auth-panel-footer {
+  z-index: var(--z-base);
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.65);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Auth Form Side */
+.auth-form-panel {
+  width: 100%;
+  max-width: 540px;
+  background-color: var(--color-bg-surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-12) var(--space-10);
+  box-shadow: -4px 0 24px rgba(15, 23, 42, 0.04);
+  position: relative;
+  overflow-y: auto;
+}
+
+.auth-card-header {
+  margin-bottom: var(--space-8);
+}
+
+.auth-header-title {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-main);
+  margin-bottom: var(--space-2);
+}
+
+.auth-header-desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.auth-switch-text {
+  margin-top: var(--space-6);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.auth-switch-text a {
+  font-weight: var(--weight-semibold);
+  color: var(--color-primary);
+}
+
+.auth-alert {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-5);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.auth-alert-error {
+  background-color: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  color: var(--color-danger);
+}
+
+.auth-alert-success {
+  background-color: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  color: var(--color-success);
+}
+
+/* Password requirements tooltip */
+.password-requirements {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Role Disclaimer Notice */
+.role-policy-notice {
+  background-color: var(--color-bg-subtle);
+  border: 1px dashed var(--color-bg-muted);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-5);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}

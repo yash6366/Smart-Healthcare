@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Management — Admin Portal — VakCare</title>
+  <meta name="description" content="Provision new doctor accounts and verify medical practitioner credentials.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app-main">
+      <div class="app-content">
+        <!-- Toolbar -->
+        <div class="action-toolbar">
+          <div class="filter-group" style="flex: 1;">
+            <div class="search-box" style="flex: 1; min-width: 240px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+              <input type="text" id="doctorSearchInput" class="form-control" placeholder="Search by name, license number, or qualification...">
+            </div>
+
+            <select id="specFilter" class="form-select" style="width: auto;">
+              <option value="">All Specializations</option>
+            </select>
+
+            <button id="resetFilterBtn" class="btn btn-outline btn-sm">Reset</button>
+          </div>
+
+          <button id="openProvisionModalBtn" class="btn btn-primary btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            Provision Doctor Account
+          </button>
+        </div>
+
+        <!-- Doctors Table Card -->
+        <div class="card">
+          <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="border: none; box-shadow: none;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Doctor Name</th>
+                    <th>Specialization</th>
+                    <th>License Number</th>
+                    <th>Fee</th>
+                    <th>Experience</th>
+                    <th>Verification</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="doctorsTableBody">
+                  <tr>
+                    <td colspan="8" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Provision Doctor Modal -->
+  <div class="modal-backdrop" id="provisionModal">
+    <div class="modal-dialog" style="max-width: 740px;">
+      <div class="modal-header">
+        <div>
+          <h3 class="card-title">Provision New Doctor Account</h3>
+          <span style="font-size: 0.8rem; color: var(--color-text-muted);">Creates credentials and initializes clinical practitioner profile</span>
+        </div>
+        <button class="btn-icon" id="closeProvisionModal" aria-label="Close dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="provisionDoctorForm" novalidate>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: var(--space-4);">
+          <div id="provisionModalAlert" class="auth-alert auth-alert-error hidden"></div>
+
+          <div style="font-size: 0.85rem; font-weight: 700; color: var(--color-primary); border-bottom: 1px solid var(--color-bg-muted); padding-bottom: 4px;">
+            1. User Authentication Credentials
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div class="form-group">
+              <label class="form-label" for="provUsername">Username <span class="required-indicator">*</span></label>
+              <input type="text" id="provUsername" name="username" class="form-control" placeholder="dr_sharma" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="provEmail">Email <span class="required-indicator">*</span></label>
+              <input type="email" id="provEmail" name="email" class="form-control" placeholder="sharma@hospital.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="provPassword">Temporary Password <span class="required-indicator">*</span></label>
+              <input type="password" id="provPassword" name="password" class="form-control" placeholder="Min 8 chars" required>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div class="form-group">
+              <label class="form-label" for="provFirstName">First Name</label>
+              <input type="text" id="provFirstName" name="first_name" class="form-control" placeholder="Ramesh">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="provLastName">Last Name</label>
+              <input type="text" id="provLastName" name="last_name" class="form-control" placeholder="Sharma">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="provPhone">Phone Number</label>
+              <input type="tel" id="provPhone" name="phone_number" class="form-control" placeholder="+91 9876543210">
+            </div>
+          </div>
+
+          <div style="font-size: 0.85rem; font-weight: 700; color: var(--color-primary); border-bottom: 1px solid var(--color-bg-muted); padding-bottom: 4px; margin-top: var(--space-2);">
+            2. Medical Practice & License Details
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label" for="provDisplayName">Display Name <span class="required-indicator">*</span></label>
+              <input type="text" id="provDisplayName" name="display_name" class="form-control" placeholder="Ramesh Sharma" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="provSpecialization">Specialization <span class="required-indicator">*</span></label>
+              <select id="provSpecialization" name="specialization" class="form-select" required></select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div class="form-group">
+              <label class="form-label" for="provQualifications">Qualifications <span class="required-indicator">*</span></label>
+              <input type="text" id="provQualifications" name="qualifications" class="form-control" placeholder="MBBS, MD" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="provExperience">Experience (Years)</label>
+              <input type="number" id="provExperience" name="years_of_experience" min="0" value="5" class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="provFee">Consultation Fee (₹)</label>
+              <input type="number" id="provFee" name="consultation_fee" min="0" value="500" class="form-control">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label" for="provLicense">Medical Council License Number <span class="required-indicator">*</span></label>
+              <input type="text" id="provLicense" name="license_number" class="form-control" placeholder="e.g. KMC-123456" required>
+            </div>
+            <div class="form-group flex flex-col justify-center">
+              <div class="form-check" style="margin-bottom: 0;">
+                <input type="checkbox" id="provIsVerified" name="is_verified" class="form-check-input" checked>
+                <label class="form-check-label" for="provIsVerified" style="font-weight: 600;">
+                  Approve & Verify Credentials Immediately
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="provBiography">Biography / Practice Notes</label>
+            <textarea id="provBiography" name="biography" class="form-textarea" placeholder="Clinical background notes..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="cancelProvisionBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitProvisionBtn">
+            <span id="provBtnText">Provision Account</span>
+            <span id="provSpinner" class="spinner hidden" style="border-top-color: white;"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Auth } from '../../js/auth.js';
+    import { api } from '../../js/api-client.js';
+    import { CONFIG } from '../../js/config.js';
+    import { initAppLayout } from '../../js/components.js';
+    import { Validation } from '../../js/validation.js';
+    import { formatCurrency, escapeHtml, renderEmptyState, showToast, showConfirmDialog } from '../../js/ui.js';
+
+    const user = await Auth.guardRoute(['ADMIN']);
+    if (!user) throw new Error('Unauthorized');
+
+    await initAppLayout({
+      title: 'Doctor Management',
+      subtitle: 'Provision medical practitioner accounts and audit license verification',
+    });
+
+    // Populate specializations in filter & modal
+    const filterSelect = document.getElementById('specFilter');
+    const modalSelect = document.getElementById('provSpecialization');
+    CONFIG.SPECIALIZATIONS.forEach(s => {
+      const opt1 = document.createElement('option');
+      opt1.value = s.value;
+      opt1.textContent = s.label;
+      filterSelect.appendChild(opt1);
+
+      const opt2 = document.createElement('option');
+      opt2.value = s.value;
+      opt2.textContent = s.label;
+      modalSelect.appendChild(opt2);
+    });
+
+    const searchInput = document.getElementById('doctorSearchInput');
+    searchInput.addEventListener('input', debounce(loadDoctors, 350));
+    filterSelect.addEventListener('change', loadDoctors);
+    document.getElementById('resetFilterBtn').addEventListener('click', () => {
+      searchInput.value = '';
+      filterSelect.value = '';
+      loadDoctors();
+    });
+
+    loadDoctors();
+
+    async function loadDoctors() {
+      const tbody = document.getElementById('doctorsTableBody');
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td></tr>`;
+
+      const params = {};
+      const search = searchInput.value.trim();
+      const spec = filterSelect.value;
+      if (search) params.search = search;
+      if (spec) params.specialization = spec;
+
+      try {
+        const res = await api.get('/doctors/', params);
+        const list = res.results || [];
+
+        if (list.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8">
+                ${renderEmptyState({
+                  title: 'No Doctors Found',
+                  message: 'No physician records matched your search filters.',
+                })}
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = list.map(d => `
+          <tr>
+            <td><span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text-subtle);">#DOC-${d.id}</span></td>
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="avatar" style="width: 32px; height: 32px; font-size: 0.75rem;">
+                  ${escapeHtml((d.display_name?.[0] || 'D').toUpperCase())}
+                </div>
+                <div>
+                  <strong>Dr. ${escapeHtml(d.display_name)}</strong>
+                  <div style="font-size: 0.75rem; color: var(--color-text-subtle);">${escapeHtml(d.qualifications || 'Physician')}</div>
+                </div>
+              </div>
+            </td>
+            <td>${escapeHtml(d.specialization_display || d.specialization)}</td>
+            <td><span style="font-family: var(--font-mono); font-size: 0.85rem;">${escapeHtml(d.license_number || 'None')}</span></td>
+            <td><strong style="color: var(--color-primary);">${formatCurrency(d.consultation_fee)}</strong></td>
+            <td>${d.years_of_experience} yrs</td>
+            <td>
+              <span class="badge ${d.is_verified ? 'badge-confirmed' : 'badge-pending'}">
+                ${d.is_verified ? 'Verified' : 'Pending'}
+              </span>
+            </td>
+            <td>
+              <button
+                class="btn btn-outline btn-sm toggle-verify-btn ${d.is_verified ? 'text-danger' : 'text-success'}"
+                data-id="${d.id}"
+                data-name="${escapeHtml(d.display_name)}"
+                data-verified="${d.is_verified}"
+              >
+                ${d.is_verified ? 'Revoke' : 'Approve'}
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        tbody.querySelectorAll('.toggle-verify-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const isCurrentlyVerified = btn.dataset.verified === 'true';
+            const actionText = isCurrentlyVerified ? 'Revoke license verification for' : 'Approve credentials for';
+            const confirmed = await showConfirmDialog({
+              title: isCurrentlyVerified ? 'Revoke Verification' : 'Approve Credentials',
+              message: `${actionText} Dr. ${btn.dataset.name}?`,
+              confirmText: isCurrentlyVerified ? 'Revoke' : 'Approve',
+              isDanger: isCurrentlyVerified,
+            });
+
+            if (confirmed) {
+              try {
+                await api.post(`/doctors/${btn.dataset.id}/verify/`, {
+                  is_verified: !isCurrentlyVerified,
+                  notes: `Credential status modified by administrator ${user.username}`,
+                });
+                showToast(`Status updated for Dr. ${btn.dataset.name}.`, 'success');
+                loadDoctors();
+              } catch (err) {
+                showToast(err.message || 'Operation failed.', 'error');
+              }
+            }
+          });
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-danger text-center">Failed to load doctors: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    // Provision Modal Handling
+    const modal = document.getElementById('provisionModal');
+    const form = document.getElementById('provisionDoctorForm');
+    const modalAlert = document.getElementById('provisionModalAlert');
+
+    function openModal() {
+      form.reset();
+      modalAlert.classList.add('hidden');
+      Validation.clearFieldErrors(form);
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+    }
+
+    document.getElementById('openProvisionModalBtn').onclick = openModal;
+    document.getElementById('closeProvisionModal').onclick = closeModal;
+    document.getElementById('cancelProvisionBtn').onclick = closeModal;
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeModal();
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      modalAlert.classList.add('hidden');
+      Validation.clearFieldErrors(form);
+
+      const username = document.getElementById('provUsername').value.trim();
+      const email = document.getElementById('provEmail').value.trim();
+      const password = document.getElementById('provPassword').value;
+      const displayName = document.getElementById('provDisplayName').value.trim();
+      const specialization = document.getElementById('provSpecialization').value;
+      const qualifications = document.getElementById('provQualifications').value.trim();
+      const licenseNumber = document.getElementById('provLicense').value.trim();
+
+      let hasError = false;
+      if (!username) {
+        Validation.setFieldError(document.getElementById('provUsername'), 'Username is required.');
+        hasError = true;
+      }
+      if (!email || !Validation.isEmail(email)) {
+        Validation.setFieldError(document.getElementById('provEmail'), 'Valid email is required.');
+        hasError = true;
+      }
+      if (!password || password.length < 8) {
+        Validation.setFieldError(document.getElementById('provPassword'), 'Password must be at least 8 characters.');
+        hasError = true;
+      }
+      if (!displayName) {
+        Validation.setFieldError(document.getElementById('provDisplayName'), 'Display name is required.');
+        hasError = true;
+      }
+      if (!qualifications) {
+        Validation.setFieldError(document.getElementById('provQualifications'), 'Qualifications are required.');
+        hasError = true;
+      }
+      if (!licenseNumber) {
+        Validation.setFieldError(document.getElementById('provLicense'), 'License number is required.');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      const submitBtn = document.getElementById('submitProvisionBtn');
+      const btnText = document.getElementById('provBtnText');
+      const spinner = document.getElementById('provSpinner');
+
+      submitBtn.disabled = true;
+      btnText.textContent = 'Provisioning...';
+      spinner.classList.remove('hidden');
+
+      const payload = {
+        username: username,
+        email: email,
+        password: password,
+        first_name: document.getElementById('provFirstName').value.trim(),
+        last_name: document.getElementById('provLastName').value.trim(),
+        phone_number: document.getElementById('provPhone').value.trim(),
+        display_name: displayName,
+        specialization: specialization,
+        qualifications: qualifications,
+        years_of_experience: parseInt(document.getElementById('provExperience').value, 10) || 0,
+        consultation_fee: parseFloat(document.getElementById('provFee').value) || 500,
+        license_number: licenseNumber,
+        biography: document.getElementById('provBiography').value.trim(),
+        is_verified: document.getElementById('provIsVerified').checked,
+        is_available: true,
+      };
+
+      try {
+        await api.post('/doctors/', payload);
+        showToast(`Doctor account for Dr. ${displayName} provisioned successfully!`, 'success');
+        closeModal();
+        loadDoctors();
+      } catch (err) {
+        modalAlert.textContent = err.message || 'Failed to provision doctor account.';
+        modalAlert.classList.remove('hidden');
+        if (err.details) {
+          Validation.applyServerErrors(form, err.details);
+        }
+      } finally {
+        submitBtn.disabled = false;
+        btnText.textContent = 'Provision Account';
+        spinner.classList.add('hidden');
+      }
+    });
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+  </script>
+</body>
+</html>

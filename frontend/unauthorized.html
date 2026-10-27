@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Denied — 403 Forbidden — VakCare</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: var(--color-bg-app); padding: 1.5rem;">
+  <div class="card" style="max-width: 480px; width: 100%; text-align: center; padding: 2.5rem 2rem;">
+    <div style="width: 64px; height: 64px; border-radius: 50%; background-color: var(--color-danger-bg); color: var(--color-danger); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+    </div>
+    <div style="font-size: 0.85rem; font-weight: 700; color: var(--color-danger); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">403 Forbidden</div>
+    <h1 style="font-size: 1.6rem; margin-bottom: 0.75rem;">Access Restricted</h1>
+    <p style="font-size: 0.95rem; color: var(--color-text-muted); line-height: 1.6; margin-bottom: 2rem;">
+      You do not have the required clinical or administrative role permissions to view this resource. Healthcare privacy policies restrict unauthorized data access.
+    </p>
+    <div class="flex justify-center gap-3">
+      <a href="index.html" class="btn btn-outline">VakCare Home</a>
+      <button id="returnDashboardBtn" class="btn btn-primary">Return to My Portal</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Auth } from './js/auth.js';
+
+    document.getElementById('returnDashboardBtn').addEventListener('click', () => {
+      if (Auth.isAuthenticated()) {
+        Auth.redirectByRole();
+      } else {
+        window.location.href = 'login.html';
+      }
+    });
+  </script>
+</body>
+</html>

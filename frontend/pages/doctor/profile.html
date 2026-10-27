@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Profile — VakCare</title>
+  <meta name="description" content="Manage physician profile, consultation fee, hours, and availability.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app-main">
+      <div class="app-content" style="max-width: 900px;">
+        <!-- Doctor Profile Card -->
+        <div class="card" style="margin-bottom: var(--space-8);">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Physician Profile & Practice Settings</h2>
+              <span style="font-size: 0.8rem; color: var(--color-text-muted);">Manage your clinical directory presence and consultation rules</span>
+            </div>
+            <span class="badge" id="verificationBadge">Status</span>
+          </div>
+
+          <form id="doctorProfileForm" novalidate>
+            <div class="card-body">
+              <div id="profileAlert" class="auth-alert hidden"></div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="displayName">
+                    Display Name <span class="required-indicator">*</span>
+                  </label>
+                  <input type="text" id="displayName" name="display_name" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="specialization">
+                    Clinical Specialization <span class="required-indicator">*</span>
+                  </label>
+                  <select id="specialization" name="specialization" class="form-select" required></select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="qualifications">Qualifications (e.g. MBBS, MD)</label>
+                  <input type="text" id="qualifications" name="qualifications" class="form-control">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="experience">Years of Experience</label>
+                  <input type="number" id="experience" name="years_of_experience" min="0" class="form-control">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="fee">Consultation Fee (₹)</label>
+                  <input type="number" id="fee" name="consultation_fee" min="0" step="50" class="form-control">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="licenseNumber">Medical License / Council No.</label>
+                  <input type="text" id="licenseNumber" name="license_number" class="form-control">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="workStart">Working Hours Start</label>
+                  <input type="time" id="workStart" name="working_hours_start" class="form-control">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="workEnd">Working Hours End</label>
+                  <input type="time" id="workEnd" name="working_hours_end" class="form-control">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="biography">Biography & Professional Summary</label>
+                <textarea id="biography" name="biography" class="form-textarea" placeholder="Overview of clinical background, areas of clinical focus, and patient approach..."></textarea>
+              </div>
+
+              <div class="form-check" style="background-color: var(--color-bg-subtle); padding: var(--space-4); border-radius: var(--radius-md); margin-top: var(--space-4);">
+                <input type="checkbox" id="isAvailable" name="is_available" class="form-check-input">
+                <label class="form-check-label" for="isAvailable" style="font-weight: 600;">
+                  Accepting New Consultations
+                  <span style="display: block; font-size: 0.75rem; font-weight: normal; color: var(--color-text-muted);">
+                    When unchecked, patients will see you as unavailable and cannot schedule new consultation slots.
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <button type="submit" id="saveDoctorBtn" class="btn btn-primary">
+                <span id="saveBtnText">Save Practice Settings</span>
+                <span id="saveSpinner" class="spinner hidden" style="border-top-color: white;"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Security / Password Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Security & Password</h2>
+          </div>
+          <form id="passwordForm" novalidate>
+            <div class="card-body">
+              <div id="passwordAlert" class="auth-alert hidden"></div>
+
+              <div class="form-group">
+                <label class="form-label" for="oldPassword">Current Password <span class="required-indicator">*</span></label>
+                <input type="password" id="oldPassword" name="old_password" class="form-control" required>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="newPassword">New Password <span class="required-indicator">*</span></label>
+                  <input type="password" id="newPassword" name="new_password" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="newPasswordConfirm">Confirm New Password <span class="required-indicator">*</span></label>
+                  <input type="password" id="newPasswordConfirm" name="new_password_confirm" class="form-control" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <button type="submit" id="changePasswordBtn" class="btn btn-outline">
+                <span id="pwdBtnText">Update Password</span>
+                <span id="pwdSpinner" class="spinner hidden"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { Auth } from '../../js/auth.js';
+    import { api } from '../../js/api-client.js';
+    import { CONFIG } from '../../js/config.js';
+    import { initAppLayout } from '../../js/components.js';
+    import { Validation } from '../../js/validation.js';
+    import { showToast } from '../../js/ui.js';
+
+    const user = await Auth.guardRoute(['DOCTOR']);
+    if (!user) throw new Error('Unauthorized');
+
+    await initAppLayout({
+      title: 'Doctor Profile',
+      subtitle: 'Manage physician credentials, consultation fee, hours, and availability',
+    });
+
+    // Populate specializations
+    const specSelect = document.getElementById('specialization');
+    CONFIG.SPECIALIZATIONS.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.value;
+      opt.textContent = s.label;
+      specSelect.appendChild(opt);
+    });
+
+    const form = document.getElementById('doctorProfileForm');
+    const profileAlert = document.getElementById('profileAlert');
+
+    loadDoctorProfile();
+
+    async function loadDoctorProfile() {
+      try {
+        const doc = await api.get('/doctors/me/');
+        document.getElementById('displayName').value = doc.display_name || '';
+        document.getElementById('specialization').value = doc.specialization || 'GENERAL_MEDICINE';
+        document.getElementById('qualifications').value = doc.qualifications || '';
+        document.getElementById('experience').value = doc.years_of_experience || 0;
+        document.getElementById('fee').value = parseFloat(doc.consultation_fee || 500);
+        document.getElementById('licenseNumber').value = doc.license_number || '';
+        document.getElementById('workStart').value = (doc.working_hours_start || '09:00:00').substring(0, 5);
+        document.getElementById('workEnd').value = (doc.working_hours_end || '17:00:00').substring(0, 5);
+        document.getElementById('biography').value = doc.biography || '';
+        document.getElementById('isAvailable').checked = doc.is_available;
+
+        const badge = document.getElementById('verificationBadge');
+        if (doc.is_verified) {
+          badge.className = 'badge badge-confirmed';
+          badge.textContent = 'License Verified';
+        } else {
+          badge.className = 'badge badge-pending';
+          badge.textContent = 'Pending Admin Verification';
+        }
+      } catch (err) {
+        showToast('Failed to load doctor profile.', 'error');
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      profileAlert.classList.add('hidden');
+      Validation.clearFieldErrors(form);
+
+      const submitBtn = document.getElementById('saveDoctorBtn');
+      const btnText = document.getElementById('saveBtnText');
+      const spinner = document.getElementById('saveSpinner');
+
+      submitBtn.disabled = true;
+      btnText.textContent = 'Saving...';
+      spinner.classList.remove('hidden');
+
+      const payload = {
+        display_name: document.getElementById('displayName').value.trim(),
+        specialization: document.getElementById('specialization').value,
+        qualifications: document.getElementById('qualifications').value.trim(),
+        years_of_experience: parseInt(document.getElementById('experience').value, 10) || 0,
+        consultation_fee: parseFloat(document.getElementById('fee').value) || 500,
+        license_number: document.getElementById('licenseNumber').value.trim(),
+        working_hours_start: document.getElementById('workStart').value ? `${document.getElementById('workStart').value}:00` : '09:00:00',
+        working_hours_end: document.getElementById('workEnd').value ? `${document.getElementById('workEnd').value}:00` : '17:00:00',
+        biography: document.getElementById('biography').value.trim(),
+        is_available: document.getElementById('isAvailable').checked,
+      };
+
+      try {
+        await api.patch('/doctors/me/', payload);
+        showToast('Doctor profile updated successfully!', 'success');
+        profileAlert.className = 'auth-alert auth-alert-success';
+        profileAlert.textContent = 'Practice settings updated.';
+        profileAlert.classList.remove('hidden');
+      } catch (err) {
+        profileAlert.className = 'auth-alert auth-alert-error';
+        profileAlert.textContent = err.message || 'Failed to update settings.';
+        profileAlert.classList.remove('hidden');
+        if (err.details) {
+          Validation.applyServerErrors(form, err.details);
+        }
+      } finally {
+        submitBtn.disabled = false;
+        btnText.textContent = 'Save Practice Settings';
+        spinner.classList.add('hidden');
+      }
+    });
+
+    // Password Update
+    const pwdForm = document.getElementById('passwordForm');
+    const pwdAlert = document.getElementById('passwordAlert');
+
+    pwdForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      pwdAlert.classList.add('hidden');
+      Validation.clearFieldErrors(pwdForm);
+
+      const oldPassword = document.getElementById('oldPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('newPasswordConfirm').value;
+
+      if (!oldPassword || !newPassword || newPassword !== confirmPassword) {
+        pwdAlert.className = 'auth-alert auth-alert-error';
+        pwdAlert.textContent = 'Please check password fields and ensure confirmation matches.';
+        pwdAlert.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        await api.post('/auth/change-password/', {
+          old_password: oldPassword,
+          new_password: newPassword,
+          new_password_confirm: confirmPassword,
+        });
+        showToast('Password updated successfully!', 'success');
+        pwdAlert.className = 'auth-alert auth-alert-success';
+        pwdAlert.textContent = 'Password changed.';
+        pwdAlert.classList.remove('hidden');
+        pwdForm.reset();
+      } catch (err) {
+        pwdAlert.className = 'auth-alert auth-alert-error';
+        pwdAlert.textContent = err.message || 'Failed to change password.';
+        pwdAlert.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

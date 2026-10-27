@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Profile — VakCare</title>
+  <meta name="description" content="Manage personal demographics, emergency contacts, and account security.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app-main">
+      <div class="app-content" style="max-width: 900px;">
+        <!-- Profile Form Card -->
+        <div class="card" style="margin-bottom: var(--space-8);">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Demographics & Clinical Profile</h2>
+              <span style="font-size: 0.8rem; color: var(--color-text-muted);">Keep your contact and emergency information up to date</span>
+            </div>
+            <span class="badge badge-confirmed" id="verifiedBadge">Verified Patient</span>
+          </div>
+
+          <form id="profileForm" novalidate>
+            <div class="card-body">
+              <div id="profileAlert" class="auth-alert hidden"></div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="firstName">First Name</label>
+                  <input type="text" id="firstName" name="first_name" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="lastName">Last Name</label>
+                  <input type="text" id="lastName" name="last_name" class="form-control">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="email">Email Address</label>
+                  <input type="email" id="email" class="form-control" disabled title="Email is managed via system administration">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="phone">Phone Number</label>
+                  <input type="tel" id="phone" name="phone_number" class="form-control">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="dob">Date of Birth</label>
+                  <input type="date" id="dob" name="date_of_birth" class="form-control">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="gender">Gender</label>
+                  <select id="gender" name="gender" class="form-select">
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                    <option value="PREFER_NOT_TO_SAY">Prefer Not to Say</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="bloodGroup">Blood Group</label>
+                  <select id="bloodGroup" name="blood_group" class="form-select">
+                    <option value="UNKNOWN">Unknown</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                  </select>
+                </div>
+              </div>
+
+              <h3 style="font-size: 1.1rem; margin-top: var(--space-6); margin-bottom: var(--space-4); color: var(--color-text-main);">
+                Emergency Contact Details
+              </h3>
+
+              <div class="grid grid-cols-3 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="emergencyName">Contact Name</label>
+                  <input type="text" id="emergencyName" name="emergency_contact_name" class="form-control" placeholder="e.g. Jane Doe">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="emergencyPhone">Contact Phone</label>
+                  <input type="tel" id="emergencyPhone" name="emergency_contact_phone" class="form-control" placeholder="e.g. +91 9876543211">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="emergencyRelation">Relationship</label>
+                  <input type="text" id="emergencyRelation" name="emergency_contact_relation" class="form-control" placeholder="e.g. Spouse / Parent">
+                </div>
+              </div>
+
+              <h3 style="font-size: 1.1rem; margin-top: var(--space-6); margin-bottom: var(--space-4); color: var(--color-text-main);">
+                Residential Address
+              </h3>
+
+              <div class="form-group">
+                <label class="form-label" for="address">Street Address</label>
+                <input type="text" id="address" name="address" class="form-control" placeholder="Street, Building, Flat No.">
+              </div>
+
+              <div class="grid grid-cols-3 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="city">City</label>
+                  <input type="text" id="city" name="city" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="state">State</label>
+                  <input type="text" id="state" name="state" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="postalCode">Postal Code</label>
+                  <input type="text" id="postalCode" name="postal_code" class="form-control">
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <button type="submit" id="saveProfileBtn" class="btn btn-primary">
+                <span id="saveBtnText">Save Profile Details</span>
+                <span id="saveSpinner" class="spinner hidden" style="border-top-color: white;"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Security / Password Card -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Security & Password</h2>
+              <span style="font-size: 0.8rem; color: var(--color-text-muted);">Update your account password securely</span>
+            </div>
+          </div>
+
+          <form id="passwordForm" novalidate>
+            <div class="card-body">
+              <div id="passwordAlert" class="auth-alert hidden"></div>
+
+              <div class="form-group">
+                <label class="form-label" for="oldPassword">Current Password <span class="required-indicator">*</span></label>
+                <input type="password" id="oldPassword" name="old_password" class="form-control" required>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label class="form-label" for="newPassword">New Password <span class="required-indicator">*</span></label>
+                  <input type="password" id="newPassword" name="new_password" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="newPasswordConfirm">Confirm New Password <span class="required-indicator">*</span></label>
+                  <input type="password" id="newPasswordConfirm" name="new_password_confirm" class="form-control" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <button type="submit" id="changePasswordBtn" class="btn btn-outline">
+                <span id="pwdBtnText">Update Password</span>
+                <span id="pwdSpinner" class="spinner hidden"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { Auth } from '../../js/auth.js';
+    import { api } from '../../js/api-client.js';
+    import { initAppLayout } from '../../js/components.js';
+    import { Validation } from '../../js/validation.js';
+    import { showToast } from '../../js/ui.js';
+
+    const user = await Auth.guardRoute(['PATIENT']);
+    if (!user) throw new Error('Unauthorized');
+
+    await initAppLayout({
+      title: 'Patient Profile',
+      subtitle: 'Manage demographic details, emergency contacts, and security settings',
+    });
+
+    const profileForm = document.getElementById('profileForm');
+    const profileAlert = document.getElementById('profileAlert');
+    const passwordForm = document.getElementById('passwordForm');
+    const passwordAlert = document.getElementById('passwordAlert');
+
+    loadProfile();
+
+    async function loadProfile() {
+      try {
+        const profile = await api.get('/patients/me/');
+        const u = profile.user || user;
+
+        document.getElementById('firstName').value = u.first_name || '';
+        document.getElementById('lastName').value = u.last_name || '';
+        document.getElementById('email').value = u.email || '';
+        document.getElementById('phone').value = u.phone_number || '';
+
+        document.getElementById('dob').value = profile.date_of_birth || '';
+        document.getElementById('gender').value = profile.gender || 'PREFER_NOT_TO_SAY';
+        document.getElementById('bloodGroup').value = profile.blood_group || 'UNKNOWN';
+
+        document.getElementById('emergencyName').value = profile.emergency_contact_name || '';
+        document.getElementById('emergencyPhone').value = profile.emergency_contact_phone || '';
+        document.getElementById('emergencyRelation').value = profile.emergency_contact_relation || '';
+
+        document.getElementById('address').value = profile.address || '';
+        document.getElementById('city').value = profile.city || '';
+        document.getElementById('state').value = profile.state || '';
+        document.getElementById('postalCode').value = profile.postal_code || '';
+      } catch (err) {
+        showToast('Failed to load profile details.', 'error');
+      }
+    }
+
+    profileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      profileAlert.classList.add('hidden');
+      Validation.clearFieldErrors(profileForm);
+
+      const saveBtn = document.getElementById('saveProfileBtn');
+      const saveBtnText = document.getElementById('saveBtnText');
+      const saveSpinner = document.getElementById('saveSpinner');
+
+      saveBtn.disabled = true;
+      saveBtnText.textContent = 'Saving...';
+      saveSpinner.classList.remove('hidden');
+
+      const payload = {
+        first_name: document.getElementById('firstName').value.trim(),
+        last_name: document.getElementById('lastName').value.trim(),
+        phone_number: document.getElementById('phone').value.trim(),
+        date_of_birth: document.getElementById('dob').value || null,
+        gender: document.getElementById('gender').value,
+        blood_group: document.getElementById('bloodGroup').value,
+        emergency_contact_name: document.getElementById('emergencyName').value.trim(),
+        emergency_contact_phone: document.getElementById('emergencyPhone').value.trim(),
+        emergency_contact_relation: document.getElementById('emergencyRelation').value.trim(),
+        address: document.getElementById('address').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        state: document.getElementById('state').value.trim(),
+        postal_code: document.getElementById('postalCode').value.trim(),
+      };
+
+      try {
+        await api.patch('/patients/me/', payload);
+        showToast('Profile updated successfully!', 'success');
+        profileAlert.className = 'auth-alert auth-alert-success';
+        profileAlert.textContent = 'Your clinical profile has been updated successfully.';
+        profileAlert.classList.remove('hidden');
+      } catch (err) {
+        profileAlert.className = 'auth-alert auth-alert-error';
+        profileAlert.textContent = err.message || 'Failed to update profile.';
+        profileAlert.classList.remove('hidden');
+        if (err.details) {
+          Validation.applyServerErrors(profileForm, err.details);
+        }
+      } finally {
+        saveBtn.disabled = false;
+        saveBtnText.textContent = 'Save Profile Details';
+        saveSpinner.classList.add('hidden');
+      }
+    });
+
+    passwordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      passwordAlert.classList.add('hidden');
+      Validation.clearFieldErrors(passwordForm);
+
+      const oldPassword = document.getElementById('oldPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('newPasswordConfirm').value;
+
+      let hasError = false;
+      if (!oldPassword) {
+        Validation.setFieldError(document.getElementById('oldPassword'), 'Current password is required.');
+        hasError = true;
+      }
+      if (!newPassword || newPassword.length < 8) {
+        Validation.setFieldError(document.getElementById('newPassword'), 'New password must be at least 8 characters.');
+        hasError = true;
+      }
+      if (newPassword !== confirmPassword) {
+        Validation.setFieldError(document.getElementById('newPasswordConfirm'), 'Passwords do not match.');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      const btn = document.getElementById('changePasswordBtn');
+      const btnText = document.getElementById('pwdBtnText');
+      const spinner = document.getElementById('pwdSpinner');
+
+      btn.disabled = true;
+      btnText.textContent = 'Updating...';
+      spinner.classList.remove('hidden');
+
+      try {
+        await api.post('/auth/change-password/', {
+          old_password: oldPassword,
+          new_password: newPassword,
+          new_password_confirm: confirmPassword,
+        });
+        showToast('Password updated successfully!', 'success');
+        passwordAlert.className = 'auth-alert auth-alert-success';
+        passwordAlert.textContent = 'Password changed successfully.';
+        passwordAlert.classList.remove('hidden');
+        passwordForm.reset();
+      } catch (err) {
+        passwordAlert.className = 'auth-alert auth-alert-error';
+        passwordAlert.textContent = err.message || 'Failed to change password.';
+        passwordAlert.classList.remove('hidden');
+        if (err.details) {
+          Validation.applyServerErrors(passwordForm, err.details);
+        }
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Update Password';
+        spinner.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

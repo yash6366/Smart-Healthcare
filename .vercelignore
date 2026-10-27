@@ -1,0 +1,16 @@
+# Vercel Deployment Ignore
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+backend/tests/
+backend/.env
+backend/.env.local
+backend/db.sqlite3
+*.log
+docs/
+.git/

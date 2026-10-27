@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Portal — VakCare</title>
+  <meta name="description" content="Manage clinical appointments, patient consultations, and issued prescriptions.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app-main">
+      <div class="app-content">
+        <!-- Doctor Header & Availability Bar -->
+        <div style="background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%); color: white; border-radius: var(--radius-xl); padding: var(--space-8); margin-bottom: var(--space-8); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-4); box-shadow: var(--shadow-md);">
+          <div>
+            <div class="flex items-center gap-2" style="margin-bottom: var(--space-2);">
+              <span class="badge" id="doctorVerifiedBadge" style="background: rgba(255,255,255,0.2); color: white; border-color: rgba(255,255,255,0.3);">Verified Practitioner</span>
+              <span style="font-size: 0.8rem; color: rgba(255,255,255,0.8);" id="doctorSpecializationTag">Specialist</span>
+            </div>
+            <h2 style="font-size: 1.75rem; margin-bottom: var(--space-1); color: white;">
+              Dr. <span id="doctorDisplayName">Practitioner</span>
+            </h2>
+            <div style="font-size: 0.85rem; color: rgba(255,255,255,0.85);" id="doctorMetaDetails">
+              Consultation Fee: ₹500.00 • Hours: 09:00 AM – 05:00 PM
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button id="toggleAvailabilityBtn" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;">
+              Availability: <strong id="availabilityStatusText">Active</strong>
+            </button>
+            <a href="appointments.html" class="btn btn-outline" style="background: white; color: var(--color-primary);">All Consultations</a>
+          </div>
+        </div>
+
+        <!-- Key Metrics Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-info">
+              <span class="stat-label">Pending Requests</span>
+              <span class="stat-value text-warning" id="statPendingRequests">0</span>
+            </div>
+            <div class="stat-icon stat-icon-amber">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <span class="stat-label">Confirmed Upcoming</span>
+              <span class="stat-value text-success" id="statConfirmedAppts">0</span>
+            </div>
+            <div class="stat-icon stat-icon-green">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <span class="stat-label">Completed Consultations</span>
+              <span class="stat-value text-info" id="statCompletedAppts">0</span>
+            </div>
+            <div class="stat-icon stat-icon-blue">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <span class="stat-label">Prescriptions Issued</span>
+              <span class="stat-value" id="statPrescriptionsIssued">0</span>
+            </div>
+            <div class="stat-icon stat-icon-teal">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Appointment Requests Needing Confirmation -->
+        <div class="card" style="margin-bottom: var(--space-8);">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Pending Consultation Requests</h2>
+              <span style="font-size: 0.8rem; color: var(--color-text-muted);">Incoming requests awaiting physician confirmation</span>
+            </div>
+            <span class="badge badge-pending" id="pendingCounterBadge">0 Pending</span>
+          </div>
+
+          <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="border: none; box-shadow: none;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>Requested Date & Time</th>
+                    <th>Symptoms / Reason</th>
+                    <th>Duration</th>
+                    <th>Decision</th>
+                  </tr>
+                </thead>
+                <tbody id="pendingRequestsTbody">
+                  <tr>
+                    <td colspan="5" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Confirmed Consultations -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Confirmed Consultations</h2>
+              <span style="font-size: 0.8rem; color: var(--color-text-muted);">Active schedule for patient appointments</span>
+            </div>
+            <a href="appointments.html" class="btn btn-outline btn-sm">Full Schedule</a>
+          </div>
+
+          <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="border: none; box-shadow: none;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>Consultation Slot</th>
+                    <th>Primary Reason</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="confirmedApptsTbody">
+                  <tr>
+                    <td colspan="5" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { Auth } from '../../js/auth.js';
+    import { api } from '../../js/api-client.js';
+    import { initAppLayout } from '../../js/components.js';
+    import { formatDate, formatTime, formatCurrency, renderStatusBadge, renderEmptyState, escapeHtml, showToast, showConfirmDialog, showPromptDialog } from '../../js/ui.js';
+
+    const user = await Auth.guardRoute(['DOCTOR', 'ADMIN']);
+    if (!user) throw new Error('Unauthorized');
+
+    await initAppLayout({
+      title: 'Doctor Overview',
+      subtitle: 'Review assigned appointments and clinical requests',
+    });
+
+    let doctorProfile = null;
+    loadDoctorData();
+
+    async function loadDoctorData() {
+      // 1. Doctor Profile
+      try {
+        doctorProfile = await api.get('/doctors/me/');
+        document.getElementById('doctorDisplayName').textContent = doctorProfile.display_name;
+        document.getElementById('doctorSpecializationTag').textContent = doctorProfile.specialization_display || doctorProfile.specialization;
+        document.getElementById('doctorMetaDetails').textContent = `Consultation Fee: ${formatCurrency(doctorProfile.consultation_fee)} • Hours: ${formatTime(doctorProfile.working_hours_start)} – ${formatTime(doctorProfile.working_hours_end)}`;
+
+        const verifiedBadge = document.getElementById('doctorVerifiedBadge');
+        if (doctorProfile.is_verified) {
+          verifiedBadge.textContent = 'Verified Practitioner';
+          verifiedBadge.style.background = 'rgba(21, 128, 61, 0.4)';
+        } else {
+          verifiedBadge.textContent = 'Verification Pending';
+          verifiedBadge.style.background = 'rgba(180, 83, 9, 0.4)';
+        }
+
+        updateAvailabilityButton(doctorProfile.is_available);
+      } catch (err) {
+        // May be admin viewing
+      }
+
+      // 2. Load Appointments counts & tables
+      loadDoctorAppointments();
+
+      // 3. Prescriptions count
+      try {
+        const pRes = await api.get('/prescriptions/', { page_size: 1 });
+        document.getElementById('statPrescriptionsIssued').textContent = pRes.count || 0;
+      } catch {}
+    }
+
+    function updateAvailabilityButton(isAvailable) {
+      const btnText = document.getElementById('availabilityStatusText');
+      btnText.textContent = isAvailable ? 'Accepting Bookings' : 'Unavailable';
+      btnText.style.color = isAvailable ? '#86efac' : '#fca5a5';
+    }
+
+    document.getElementById('toggleAvailabilityBtn').addEventListener('click', async () => {
+      if (!doctorProfile) return;
+      const newStatus = !doctorProfile.is_available;
+      try {
+        const updated = await api.patch('/doctors/me/', { is_available: newStatus });
+        doctorProfile.is_available = updated.is_available;
+        updateAvailabilityButton(updated.is_available);
+        showToast(`Availability status updated to ${updated.is_available ? 'Active' : 'Unavailable'}.`, 'success');
+      } catch (err) {
+        showToast(err.message || 'Failed to update availability.', 'error');
+      }
+    });
+
+    async function loadDoctorAppointments() {
+      // Load Pending
+      try {
+        const pendingRes = await api.get('/appointments/', { status: 'PENDING', page_size: 5 });
+        const pendingList = pendingRes.results || [];
+        document.getElementById('statPendingRequests').textContent = pendingRes.count || pendingList.length;
+        document.getElementById('pendingCounterBadge').textContent = `${pendingRes.count || pendingList.length} Pending`;
+
+        const pTbody = document.getElementById('pendingRequestsTbody');
+        if (pendingList.length === 0) {
+          pTbody.innerHTML = `
+            <tr>
+              <td colspan="5">
+                ${renderEmptyState({
+                  title: 'No Pending Requests',
+                  message: 'You have no appointment requests waiting for confirmation.',
+                })}
+              </td>
+            </tr>
+          `;
+        } else {
+          pTbody.innerHTML = pendingList.map(a => `
+            <tr>
+              <td>
+                <div class="flex items-center gap-3">
+                  <div class="avatar" style="width: 32px; height: 32px; font-size: 0.75rem;">
+                    ${escapeHtml((a.patient?.user?.first_name?.[0] || a.patient?.user?.username?.[0] || 'P').toUpperCase())}
+                  </div>
+                  <div>
+                    <strong>${escapeHtml(a.patient?.user?.first_name ? `${a.patient.user.first_name} ${a.patient.user.last_name}` : a.patient?.user?.username || 'Patient')}</strong>
+                    <div style="font-size: 0.75rem; color: var(--color-text-subtle);">${escapeHtml(a.patient?.user?.email || '')}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div style="font-weight: 500;">${formatDate(a.appointment_date)}</div>
+                <div style="font-size: 0.75rem; color: var(--color-text-subtle);">${formatTime(a.start_time)}</div>
+              </td>
+              <td style="max-width: 260px;">
+                <div style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(a.reason)}">
+                  ${escapeHtml(a.reason)}
+                </div>
+              </td>
+              <td>${a.duration_minutes} min</td>
+              <td>
+                <div class="flex gap-2">
+                  <button class="btn btn-primary btn-sm confirm-btn" data-id="${a.id}">Confirm</button>
+                  <button class="btn btn-outline btn-sm text-danger reject-btn" data-id="${a.id}">Reject</button>
+                </div>
+              </td>
+            </tr>
+          `).join('');
+
+          pTbody.querySelectorAll('.confirm-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              try {
+                await api.post(`/appointments/${btn.dataset.id}/confirm/`);
+                showToast('Appointment confirmed!', 'success');
+                loadDoctorAppointments();
+              } catch (err) {
+                showToast(err.message || 'Failed to confirm appointment.', 'error');
+              }
+            });
+          });
+
+          pTbody.querySelectorAll('.reject-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const reason = await showPromptDialog({
+                title: 'Reject Appointment Request',
+                message: 'Please provide a clinical or scheduling reason for rejecting this appointment:',
+                placeholder: 'e.g. Schedule conflict, specialist referral recommended...',
+                confirmText: 'Reject Appointment',
+                isDanger: true,
+                required: true,
+              });
+              if (!reason) return;
+              try {
+                await api.post(`/appointments/${btn.dataset.id}/reject/`, { reason });
+                showToast('Appointment rejected.', 'info');
+                loadDoctorAppointments();
+              } catch (err) {
+                showToast(err.message || 'Failed to reject appointment.', 'error');
+              }
+            });
+          });
+        }
+      } catch (err) {
+        document.getElementById('pendingRequestsTbody').innerHTML = `
+          <tr><td colspan="5" class="text-danger text-center">Failed to load pending appointments.</td></tr>
+        `;
+      }
+
+      // Load Confirmed & Completed Counts
+      try {
+        const confRes = await api.get('/appointments/', { status: 'CONFIRMED', page_size: 5 });
+        const confList = confRes.results || [];
+        document.getElementById('statConfirmedAppts').textContent = confRes.count || confList.length;
+
+        const cTbody = document.getElementById('confirmedApptsTbody');
+        if (confList.length === 0) {
+          cTbody.innerHTML = `
+            <tr>
+              <td colspan="5">
+                ${renderEmptyState({
+                  title: 'No Confirmed Consultations',
+                  message: 'No upcoming confirmed consultations scheduled.',
+                })}
+              </td>
+            </tr>
+          `;
+        } else {
+          cTbody.innerHTML = confList.map(a => `
+            <tr>
+              <td>
+                <div class="flex items-center gap-3">
+                  <div class="avatar" style="width: 32px; height: 32px; font-size: 0.75rem;">
+                    ${escapeHtml((a.patient?.user?.first_name?.[0] || 'P').toUpperCase())}
+                  </div>
+                  <strong>${escapeHtml(a.patient?.user?.first_name ? `${a.patient.user.first_name} ${a.patient.user.last_name}` : a.patient?.user?.username || 'Patient')}</strong>
+                </div>
+              </td>
+              <td>
+                <div style="font-weight: 500;">${formatDate(a.appointment_date)}</div>
+                <div style="font-size: 0.75rem; color: var(--color-text-subtle);">${formatTime(a.start_time)} (${a.duration_minutes} min)</div>
+              </td>
+              <td style="max-width: 260px;">
+                <div style="font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  ${escapeHtml(a.reason)}
+                </div>
+              </td>
+              <td>${renderStatusBadge(a.status)}</td>
+              <td>
+                <button class="btn btn-outline btn-sm complete-btn" data-id="${a.id}">
+                  Mark Completed
+                </button>
+              </td>
+            </tr>
+          `).join('');
+
+          cTbody.querySelectorAll('.complete-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const confirmed = await showConfirmDialog({
+                title: 'Complete Consultation',
+                message: 'Mark this consultation as completed?',
+                confirmText: 'Complete',
+              });
+              if (confirmed) {
+                try {
+                  await api.post(`/appointments/${btn.dataset.id}/complete/`);
+                  showToast('Appointment completed successfully.', 'success');
+                  loadDoctorAppointments();
+                } catch (err) {
+                  showToast(err.message || 'Failed to complete appointment.', 'error');
+                }
+              }
+            });
+          });
+        }
+      } catch (err) {
+        document.getElementById('confirmedApptsTbody').innerHTML = `
+          <tr><td colspan="5" class="text-danger text-center">Failed to load confirmed appointments.</td></tr>
+        `;
+      }
+
+      // Completed Count
+      try {
+        const compRes = await api.get('/appointments/', { status: 'COMPLETED', page_size: 1 });
+        document.getElementById('statCompletedAppts').textContent = compRes.count || 0;
+      } catch {}
+    }
+  </script>
+</body>
+</html>

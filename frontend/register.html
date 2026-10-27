@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Patient Account — VakCare</title>
+  <meta name="description" content="Register as a patient on the VakCare Healthcare Management platform.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <div class="auth-wrapper">
+    <!-- Visual Brand Panel -->
+    <div class="auth-sidebar-panel">
+      <div class="auth-panel-brand">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20M7 7l10 10M17 7 7 17"/></svg>
+        </div>
+        <span class="brand-name" style="font-size: 1.35rem; color: white;">VakCare</span>
+      </div>
+
+      <div class="auth-panel-quote">
+        <h2>Your health journey, simplified & secure.</h2>
+        <p>Register as a patient to schedule verified doctor consultations, maintain your electronic health history, and query our AI healthcare assistant.</p>
+      </div>
+
+      <div class="auth-panel-footer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+        <span>Protected by HIPAA-grade security audit trails</span>
+      </div>
+    </div>
+
+    <!-- Form Side -->
+    <div class="auth-form-panel">
+      <div class="auth-card-header">
+        <a href="index.html" class="flex items-center gap-2 text-primary" style="font-size: 0.85rem; font-weight: 500; margin-bottom: var(--space-4);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Back to VakCare Home
+        </a>
+        <h1 class="auth-header-title">Create Patient Account</h1>
+        <p class="auth-header-desc">Complete the form below to establish your secure clinical profile.</p>
+      </div>
+
+      <!-- Feedback Alert Banner -->
+      <div id="authAlert" class="hidden auth-alert"></div>
+
+      <form id="registerForm" novalidate>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label" for="regFirstName">First Name</label>
+            <input type="text" id="regFirstName" name="first_name" class="form-control" placeholder="e.g. John">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regLastName">Last Name</label>
+            <input type="text" id="regLastName" name="last_name" class="form-control" placeholder="e.g. Doe">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regUsername">
+            Username <span class="required-indicator">*</span>
+          </label>
+          <input
+            type="text"
+            id="regUsername"
+            name="username"
+            class="form-control"
+            placeholder="Choose a unique username"
+            autocomplete="username"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regEmail">
+            Email Address <span class="required-indicator">*</span>
+          </label>
+          <input
+            type="email"
+            id="regEmail"
+            name="email"
+            class="form-control"
+            placeholder="e.g. john@example.com"
+            autocomplete="email"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regPhone">Phone Number</label>
+          <input
+            type="tel"
+            id="regPhone"
+            name="phone_number"
+            class="form-control"
+            placeholder="e.g. +91 9876543210"
+            autocomplete="tel"
+          >
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label class="form-label" for="regPassword">
+              Password <span class="required-indicator">*</span>
+            </label>
+            <input
+              type="password"
+              id="regPassword"
+              name="password"
+              class="form-control"
+              placeholder="Min. 8 characters"
+              autocomplete="new-password"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="regPasswordConfirm">
+              Confirm Password <span class="required-indicator">*</span>
+            </label>
+            <input
+              type="password"
+              id="regPasswordConfirm"
+              name="password_confirm"
+              class="form-control"
+              placeholder="Re-enter password"
+              autocomplete="new-password"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="password-requirements">
+          Password must be at least 8 characters long and cannot be entirely numeric.
+        </div>
+
+        <button type="submit" id="submitRegisterBtn" class="btn btn-primary" style="width: 100%; padding: 0.8rem; margin-top: var(--space-6);">
+          <span id="btnText">Create Patient Account</span>
+          <span id="btnSpinner" class="spinner hidden" style="border-top-color: white; border-color: rgba(255,255,255,0.3);"></span>
+        </button>
+      </form>
+
+      <div class="auth-switch-text">
+        Already have an account? <a href="login.html">Sign In</a>
+      </div>
+
+      <div class="role-policy-notice">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-info" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
+        <div>
+          <strong>Physicians & Healthcare Practitioners:</strong> Doctor accounts require administrative provisioning and medical license verification. Please contact platform administration to establish your doctor account.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Auth } from './js/auth.js';
+    import { Validation } from './js/validation.js';
+
+    const form = document.getElementById('registerForm');
+    const usernameInput = document.getElementById('regUsername');
+    const emailInput = document.getElementById('regEmail');
+    const passwordInput = document.getElementById('regPassword');
+    const confirmInput = document.getElementById('regPasswordConfirm');
+    const firstNameInput = document.getElementById('regFirstName');
+    const lastNameInput = document.getElementById('regLastName');
+    const phoneInput = document.getElementById('regPhone');
+
+    const submitBtn = document.getElementById('submitRegisterBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const alertBox = document.getElementById('authAlert');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+      Validation.clearFieldErrors(form);
+
+      const username = usernameInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const confirmPassword = confirmInput.value;
+      const firstName = firstNameInput.value.trim();
+      const lastName = lastNameInput.value.trim();
+      const phone = phoneInput.value.trim();
+
+      let hasError = false;
+
+      if (!username) {
+        Validation.setFieldError(usernameInput, 'Please choose a username.');
+        hasError = true;
+      }
+
+      if (!email) {
+        Validation.setFieldError(emailInput, 'Please enter your email address.');
+        hasError = true;
+      } else if (!Validation.isEmail(email)) {
+        Validation.setFieldError(emailInput, 'Please enter a valid email address.');
+        hasError = true;
+      }
+
+      if (!password) {
+        Validation.setFieldError(passwordInput, 'Please enter a password.');
+        hasError = true;
+      } else if (!Validation.isStrongPassword(password)) {
+        Validation.setFieldError(passwordInput, 'Password must be at least 8 characters long.');
+        hasError = true;
+      }
+
+      if (!confirmPassword) {
+        Validation.setFieldError(confirmInput, 'Please confirm your password.');
+        hasError = true;
+      } else if (password !== confirmPassword) {
+        Validation.setFieldError(confirmInput, 'Passwords do not match.');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      setLoading(true);
+
+      try {
+        const payload = {
+          username,
+          email,
+          password,
+          password_confirm: confirmPassword,
+          first_name: firstName,
+          last_name: lastName,
+          phone_number: phone,
+        };
+
+        const result = await Auth.register(payload);
+        showAlert('Registration successful! Redirecting to sign in...', 'success');
+
+        setTimeout(() => {
+          window.location.href = 'login.html?registered=true';
+        }, 1500);
+      } catch (err) {
+        setLoading(false);
+        const errorMsg = err.message || 'Registration failed. Please check the form fields.';
+        showAlert(errorMsg, 'error');
+
+        if (err.details) {
+          Validation.applyServerErrors(form, err.details);
+        }
+      }
+    });
+
+    function setLoading(isLoading) {
+      submitBtn.disabled = isLoading;
+      if (isLoading) {
+        btnText.textContent = 'Creating Account...';
+        btnSpinner.classList.remove('hidden');
+      } else {
+        btnText.textContent = 'Create Patient Account';
+        btnSpinner.classList.add('hidden');
+      }
+    }
+
+    function showAlert(msg, type = 'error') {
+      alertBox.className = `auth-alert auth-alert-${type}`;
+      alertBox.textContent = msg;
+      alertBox.classList.remove('hidden');
+    }
+
+    function hideAlert() {
+      alertBox.classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

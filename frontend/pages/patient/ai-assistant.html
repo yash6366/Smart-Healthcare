@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Healthcare Assistant — VakCare</title>
+  <meta name="description" content="AI-assisted symptom education, health inquiries, and multi-turn clinical guidance.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+  <style>
+    .ai-workspace {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: var(--space-4);
+      height: calc(100vh - var(--topbar-height) - 4.5rem);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .conversations-sidebar {
+      background-color: var(--color-bg-surface);
+      border: 1px solid var(--color-bg-muted);
+      border-radius: var(--radius-xl);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .conversations-sidebar-header {
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--color-bg-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #fafbfc;
+    }
+    .conversations-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-3);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .conversation-item {
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-lg);
+      border: 1px solid transparent;
+      background-color: transparent;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--space-2);
+      transition: all var(--transition-fast);
+      text-align: left;
+      width: 100%;
+    }
+    .conversation-item:hover {
+      background-color: var(--color-bg-subtle);
+      border-color: var(--color-bg-muted);
+    }
+    .conversation-item.active {
+      background-color: var(--color-primary-subtle);
+      border-color: var(--color-primary);
+    }
+    .conversation-item-title {
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: var(--color-text-main);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-bottom: 2px;
+    }
+    .conversation-item.active .conversation-item-title {
+      color: var(--color-primary);
+    }
+    .conversation-item-meta {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+    }
+    .conversation-item-delete {
+      opacity: 0;
+      color: var(--color-danger);
+      background: none;
+      border: none;
+      padding: 2px 4px;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: opacity var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .conversation-item:hover .conversation-item-delete {
+      opacity: 1;
+    }
+    .conversation-item-delete:hover {
+      background-color: var(--color-danger-bg);
+    }
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      background-color: var(--color-bg-surface);
+      border: 1px solid var(--color-bg-muted);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+    .chat-header-bar {
+      padding: var(--space-3) var(--space-6);
+      border-bottom: 1px solid var(--color-bg-muted);
+      background-color: #fafbfc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .chat-messages {
+      flex: 1;
+      padding: var(--space-6);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+    .chat-bubble {
+      max-width: 82%;
+      padding: var(--space-4) var(--space-5);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-sm);
+      line-height: 1.6;
+    }
+    .chat-bubble-user {
+      align-self: flex-end;
+      background-color: var(--color-primary);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-bubble-ai {
+      align-self: flex-start;
+      background-color: var(--color-bg-subtle);
+      border: 1px solid var(--color-bg-muted);
+      color: var(--color-text-main);
+      border-bottom-left-radius: 4px;
+    }
+    .chat-input-bar {
+      padding: var(--space-4) var(--space-6);
+      border-top: 1px solid var(--color-bg-muted);
+      background-color: var(--color-bg-surface);
+      display: flex;
+      gap: var(--space-3);
+    }
+    .quick-prompts {
+      display: flex;
+      gap: var(--space-2);
+      overflow-x: auto;
+      padding: var(--space-2) var(--space-6);
+      border-top: 1px solid var(--color-bg-muted);
+      background-color: #fafbfc;
+    }
+    .quick-prompt-btn {
+      padding: 0.35rem 0.75rem;
+      font-size: var(--text-xs);
+      border-radius: var(--radius-full);
+      background-color: white;
+      border: 1px solid var(--color-bg-muted);
+      color: var(--color-text-muted);
+      white-space: nowrap;
+      transition: all var(--transition-fast);
+      cursor: pointer;
+    }
+    .quick-prompt-btn:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background-color: var(--color-primary-subtle);
+    }
+    .emergency-banner {
+      background-color: var(--color-danger-bg);
+      border-left: 4px solid var(--color-danger);
+      color: var(--color-danger);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      margin-bottom: var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    @media (max-width: 900px) {
+      .ai-workspace {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .conversations-sidebar {
+        max-height: 220px;
+      }
+      .chat-container {
+        height: 600px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app-main">
+      <div class="app-content" style="padding-top: var(--space-4); padding-bottom: var(--space-4);">
+        <!-- Healthcare Safety Notice -->
+        <div class="alert alert-info" style="margin-bottom: var(--space-4); font-size: 0.8rem; line-height: 1.5;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
+          <div>
+            <strong>Clinical Safety Notice:</strong> VakCare AI Assistant provides informational health education only and cannot diagnose diseases or replace licensed physicians. If you are experiencing chest pain, severe shortness of breath, or a medical emergency, call emergency services immediately.
+          </div>
+        </div>
+
+        <!-- 2-Column AI Workspace -->
+        <div class="ai-workspace">
+          <!-- Left: Multi-Turn Conversation History -->
+          <div class="conversations-sidebar">
+            <div class="conversations-sidebar-header">
+              <span style="font-weight: 700; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted);">
+                Consultations
+              </span>
+              <button type="button" id="newChatBtn" class="btn btn-primary btn-sm" style="font-size: 0.75rem; padding: 3px 10px;">
+                + New Chat
+              </button>
+            </div>
+            <div class="conversations-list" id="convList">
+              <div class="text-center" style="padding: 1rem;"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+          <!-- Right: Chat Container -->
+          <div class="chat-container">
+            <div class="chat-header-bar">
+              <div class="flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--color-primary);"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                <strong id="activeChatTitle" style="font-size: var(--text-sm); color: var(--color-text-main);">New Consultation</strong>
+              </div>
+              <span id="activeEngineBadge" class="badge badge-neutral" style="font-size: 0.7rem;">AI ENGINE: ACTIVE</span>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+              <!-- Initial Welcome Bubble -->
+              <div class="chat-bubble chat-bubble-ai" id="defaultWelcomeBubble">
+                <div class="flex items-center gap-2" style="font-weight: 700; color: var(--color-primary); margin-bottom: 6px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                  <span>VakCare Health Assistant</span>
+                </div>
+                <p style="margin-bottom: 8px;">
+                  Hello! I am your AI healthcare assistant. You can ask me questions about symptoms, wellness guidance, or general health information.
+                </p>
+                <div style="font-size: 0.75rem; color: var(--color-text-subtle);">
+                  How may I assist your health inquiries today?
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Prompts Row -->
+            <div class="quick-prompts">
+              <button type="button" class="quick-prompt-btn" data-query="What is the difference between tension headache and migraine?">Headache vs Migraine</button>
+              <button type="button" class="quick-prompt-btn" data-query="How can I prepare for a routine cardiology consultation?">Preparing for Doctor Visit</button>
+              <button type="button" class="quick-prompt-btn" data-query="What are effective lifestyle strategies to manage borderline hypertension?">Managing High Blood Pressure</button>
+              <button type="button" class="quick-prompt-btn" data-query="What are common signs of seasonal pollen allergies?">Seasonal Allergies</button>
+            </div>
+
+            <!-- Input Bar -->
+            <form class="chat-input-bar" id="chatForm">
+              <input
+                type="text"
+                id="chatInput"
+                class="form-control"
+                placeholder="Ask a health inquiry or describe symptoms (min 5 characters)..."
+                autocomplete="off"
+                required
+              >
+              <button type="submit" id="sendBtn" class="btn btn-primary" style="padding-left: 1.5rem; padding-right: 1.5rem;">
+                <span id="sendBtnText">Send</span>
+                <span id="sendSpinner" class="spinner hidden" style="border-top-color: white;"></span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { Auth } from '../../js/auth.js';
+    import { api } from '../../js/api-client.js';
+    import { initAppLayout } from '../../js/components.js';
+    import { escapeHtml, showToast, formatDate } from '../../js/ui.js';
+
+    const user = await Auth.guardRoute(['PATIENT', 'DOCTOR', 'ADMIN']);
+    if (!user) throw new Error('Unauthorized');
+
+    await initAppLayout({
+      title: 'AI Healthcare Assistant',
+      subtitle: 'Informational symptom education, multi-turn clinical guidance, and inquiry history',
+    });
+
+    const chatMessages = document.getElementById('chatMessages');
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const sendBtnText = document.getElementById('sendBtnText');
+    const sendSpinner = document.getElementById('sendSpinner');
+    const convList = document.getElementById('convList');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const activeChatTitle = document.getElementById('activeChatTitle');
+
+    let currentConversationId = null;
+    let lastQuery = '';
+
+    // Initialize
+    loadConversations();
+
+    // New Chat Button
+    newChatBtn.addEventListener('click', () => {
+      startNewChat();
+    });
+
+    // Quick prompt buttons
+    document.querySelectorAll('.quick-prompt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        chatInput.value = btn.dataset.query;
+        chatForm.dispatchEvent(new Event('submit'));
+      });
+    });
+
+    // Submit handler
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const query = chatInput.value.trim();
+      if (!query || query.length < 5) {
+        showToast('Please enter an inquiry with at least 5 characters.', 'warning');
+        return;
+      }
+
+      lastQuery = query;
+      appendUserBubble(query);
+      chatInput.value = '';
+      setLoading(true);
+
+      const loadingBubble = appendLoadingBubble();
+      scrollToBottom();
+
+      try {
+        if (currentConversationId) {
+          // Follow-up query in existing conversation
+          const res = await api.post(`/ai/conversations/${currentConversationId}/messages/`, {
+            query: query,
+          });
+          loadingBubble.remove();
+          appendAiBubble({
+            guidance: res.assistant_message.content,
+            provider: res.assistant_message.metadata?.provider,
+            suggested_specialization: res.assistant_message.metadata?.suggested_specialization,
+            disclaimer: res.assistant_message.metadata?.disclaimer,
+            is_emergency_alert: res.assistant_message.metadata?.is_emergency_alert,
+          });
+          loadConversations(false);
+        } else {
+          // Start brand new persistent conversation
+          const res = await api.post('/ai/conversations/', {
+            query: query,
+          });
+          loadingBubble.remove();
+          const conv = res.conversation;
+          currentConversationId = conv.id;
+          activeChatTitle.textContent = conv.title || 'Consultation Session';
+
+          const aiMsg = conv.messages.find(m => m.role === 'ASSISTANT');
+          if (aiMsg) {
+            appendAiBubble({
+              guidance: aiMsg.content,
+              provider: aiMsg.metadata?.provider,
+              suggested_specialization: aiMsg.metadata?.suggested_specialization,
+              disclaimer: aiMsg.metadata?.disclaimer,
+              is_emergency_alert: aiMsg.metadata?.is_emergency_alert,
+            });
+          }
+          loadConversations();
+        }
+      } catch (err) {
+        loadingBubble.remove();
+        appendErrorBubble(err.message || 'Failed to generate guidance. Please try again.', query);
+      } finally {
+        setLoading(false);
+        scrollToBottom();
+      }
+    });
+
+    async function loadConversations(switchActive = true) {
+      try {
+        const res = await api.get('/ai/conversations/');
+        const conversations = res.results || [];
+
+        if (conversations.length === 0) {
+          convList.innerHTML = `
+            <div style="font-size: 0.75rem; color: var(--color-text-muted); text-align: center; padding: 1.5rem 0.5rem;">
+              No previous consultations.<br>Start a new inquiry!
+            </div>
+          `;
+          return;
+        }
+
+        convList.innerHTML = conversations.map(c => `
+          <div class="conversation-item ${c.id === currentConversationId ? 'active' : ''}" data-id="${c.id}">
+            <div style="flex: 1; min-width: 0;">
+              <div class="conversation-item-title">${escapeHtml(c.title)}</div>
+              <div class="conversation-item-meta">${formatDate(c.updated_at)} • ${c.message_count || 1} msg</div>
+            </div>
+            <button type="button" class="conversation-item-delete" title="Delete conversation" data-id="${c.id}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        `).join('');
+
+        // Wire click handlers
+        convList.querySelectorAll('.conversation-item').forEach(item => {
+          item.addEventListener('click', (e) => {
+            if (e.target.closest('.conversation-item-delete')) return;
+            selectConversation(parseInt(item.dataset.id, 10));
+          });
+        });
+
+        // Wire delete buttons
+        convList.querySelectorAll('.conversation-item-delete').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.id, 10);
+            if (confirm('Delete this conversation history permanently?')) {
+              try {
+                await api.delete(`/ai/conversations/${id}/`);
+                showToast('Conversation deleted.', 'info');
+                if (currentConversationId === id) {
+                  startNewChat();
+                } else {
+                  loadConversations(false);
+                }
+              } catch (err) {
+                showToast(err.message || 'Failed to delete conversation.', 'error');
+              }
+            }
+          });
+        });
+      } catch (err) {
+        convList.innerHTML = `<div class="text-danger" style="font-size: 0.75rem; padding: 1rem;">Failed to load sessions.</div>`;
+      }
+    }
+
+    async function selectConversation(id) {
+      currentConversationId = id;
+      document.querySelectorAll('.conversation-item').forEach(el => {
+        el.classList.toggle('active', parseInt(el.dataset.id, 10) === id);
+      });
+
+      chatMessages.innerHTML = '<div class="text-center" style="padding: 2rem;"><div class="spinner"></div></div>';
+
+      try {
+        const res = await api.get(`/ai/conversations/${id}/`);
+        const conv = res.conversation;
+        activeChatTitle.textContent = conv.title || 'Consultation Session';
+        chatMessages.innerHTML = '';
+
+        (conv.messages || []).forEach(msg => {
+          if (msg.role === 'USER') {
+            appendUserBubble(msg.content);
+          } else {
+            appendAiBubble({
+              guidance: msg.content,
+              provider: msg.metadata?.provider,
+              suggested_specialization: msg.metadata?.suggested_specialization,
+              disclaimer: msg.metadata?.disclaimer,
+              is_emergency_alert: msg.metadata?.is_emergency_alert,
+            });
+          }
+        });
+        scrollToBottom();
+      } catch (err) {
+        chatMessages.innerHTML = `<div class="text-danger" style="padding: 2rem;">Failed to load messages: ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function startNewChat() {
+      currentConversationId = null;
+      activeChatTitle.textContent = 'New Consultation';
+      document.querySelectorAll('.conversation-item').forEach(el => el.classList.remove('active'));
+      chatMessages.innerHTML = `
+        <div class="chat-bubble chat-bubble-ai">
+          <div class="flex items-center gap-2" style="font-weight: 700; color: var(--color-primary); margin-bottom: 6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            <span>VakCare Health Assistant</span>
+          </div>
+          <p style="margin-bottom: 8px;">
+            Hello! I am your AI healthcare assistant. You can ask me questions about symptoms, wellness guidance, or general health information.
+          </p>
+          <div style="font-size: 0.75rem; color: var(--color-text-subtle);">
+            How may I assist your health inquiries today?
+          </div>
+        </div>
+      `;
+      chatInput.focus();
+    }
+
+    function appendUserBubble(text) {
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble chat-bubble-user';
+      bubble.textContent = text;
+      chatMessages.appendChild(bubble);
+      scrollToBottom();
+    }
+
+    function appendLoadingBubble() {
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble chat-bubble-ai';
+      bubble.innerHTML = `
+        <div class="flex items-center gap-2" style="color: var(--color-primary); font-size: 0.85rem;">
+          <div class="spinner"></div>
+          <span>Consulting healthcare knowledge base...</span>
+        </div>
+      `;
+      chatMessages.appendChild(bubble);
+      return bubble;
+    }
+
+    function appendAiBubble(data) {
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble chat-bubble-ai';
+
+      let emergencyHtml = '';
+      if (data.is_emergency_alert) {
+        emergencyHtml = `
+          <div class="emergency-banner">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+            <span>Emergency Alert: These symptoms may require immediate medical attention. Please contact emergency services.</span>
+          </div>
+        `;
+      }
+
+      let specTagHtml = '';
+      if (data.suggested_specialization) {
+        specTagHtml = `
+          <div style="margin-top: var(--space-3); padding-top: var(--space-2); border-top: 1px dashed var(--color-bg-muted); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div style="font-size: 0.75rem; color: var(--color-text-muted);">
+              Suggested Field: <strong>${escapeHtml(data.suggested_specialization)}</strong>
+            </div>
+            <a href="doctors.html?specialization=${encodeURIComponent(data.suggested_specialization)}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 2px 8px;">
+              Find ${escapeHtml(data.suggested_specialization)} Doctors &rarr;
+            </a>
+          </div>
+        `;
+      }
+
+      const disclaimer = data.disclaimer || 'DISCLAIMER: For educational purposes only. Does not replace professional clinical evaluation.';
+
+      bubble.innerHTML = `
+        ${emergencyHtml}
+        <div class="flex items-center justify-between" style="margin-bottom: 6px;">
+          <span style="font-weight: 700; color: var(--color-primary); font-size: 0.85rem;">AI Clinical Guidance</span>
+          <div class="flex items-center gap-2">
+            <span style="font-size: 0.7rem; color: var(--color-text-subtle); text-transform: uppercase;">Engine: ${escapeHtml(data.provider || 'VakCare AI')}</span>
+            <button type="button" class="btn btn-ghost btn-sm copy-guidance-btn" style="font-size: 0.7rem; padding: 2px 6px;" title="Copy guidance">Copy</button>
+          </div>
+        </div>
+        <div style="font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap;" class="guidance-text">${escapeHtml(data.guidance || '')}</div>
+        ${specTagHtml}
+        <div style="font-size: 0.7rem; color: var(--color-text-subtle); margin-top: var(--space-3); padding-top: var(--space-2); border-top: 1px solid var(--color-bg-muted); font-style: italic;">
+          ${escapeHtml(disclaimer)}
+        </div>
+      `;
+
+      const copyBtn = bubble.querySelector('.copy-guidance-btn');
+      if (copyBtn) {
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(data.guidance || '')
+            .then(() => showToast('Guidance copied to clipboard.', 'info'))
+            .catch(() => showToast('Failed to copy to clipboard.', 'warning'));
+        };
+      }
+
+      chatMessages.appendChild(bubble);
+    }
+
+    function appendErrorBubble(errMsg, retryQuery) {
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble chat-bubble-ai';
+      bubble.innerHTML = `
+        <div class="flex items-center justify-between gap-3">
+          <div><span class="text-danger" style="font-weight: 600;">Error:</span> ${escapeHtml(errMsg)}</div>
+          <button type="button" class="btn btn-outline btn-sm retry-btn" style="padding: 2px 8px; font-size: 0.75rem;">Retry</button>
+        </div>
+      `;
+      const retryBtn = bubble.querySelector('.retry-btn');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+          bubble.remove();
+          chatInput.value = retryQuery;
+          chatForm.dispatchEvent(new Event('submit'));
+        });
+      }
+      chatMessages.appendChild(bubble);
+    }
+
+    function setLoading(isLoading) {
+      sendBtn.disabled = isLoading;
+      chatInput.disabled = isLoading;
+      if (isLoading) {
+        sendBtnText.textContent = '';
+        sendSpinner.classList.remove('hidden');
+      } else {
+        sendBtnText.textContent = 'Send';
+        sendSpinner.classList.add('hidden');
+        chatInput.focus();
+      }
+    }
+
+    function scrollToBottom() {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  </script>
+</body>
+</html>

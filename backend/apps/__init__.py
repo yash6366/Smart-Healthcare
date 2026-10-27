@@ -1,0 +1,1 @@
+"""VakCare applications package."""

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Issue Prescriptions — Doctor Portal — VakCare</title>
+  <meta name="description" content="Issue verified digital prescriptions with multi-medication itemization.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/variables.css">
+  <link rel="stylesheet" href="../../css/reset.css">
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/components.css">
+  <link rel="stylesheet" href="../../css/forms.css">
+  <link rel="stylesheet" href="../../css/dashboard.css">
+  <link rel="stylesheet" href="../../css/responsive.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="app-main">
+      <div class="app-content">
+        <!-- Toolbar -->
+        <div class="action-toolbar">
+          <div class="filter-group">
+            <select id="statusFilter" class="form-select" style="width: auto; min-width: 180px;">
+              <option value="">All Prescriptions</option>
+              <option value="ACTIVE" selected>Active</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+
+          <button id="openNewPrescModalBtn" class="btn btn-primary btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            Issue New Prescription
+          </button>
+        </div>
+
+        <!-- Prescriptions Table Card -->
+        <div class="card">
+          <div class="card-body" style="padding: 0;">
+            <div class="table-container" style="border: none; box-shadow: none;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Prescription #</th>
+                    <th>Patient Name</th>
+                    <th>Clinical Diagnosis</th>
+                    <th>Medications</th>
+                    <th>Date Issued</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="prescriptionsTableBody">
+                  <tr>
+                    <td colspan="7" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Issue Prescription Modal -->
+  <div class="modal-backdrop" id="newPrescModal">
+    <div class="modal-dialog" style="max-width: 740px;">
+      <div class="modal-header">
+        <h3 class="card-title">Issue Medical Prescription</h3>
+        <button class="btn-icon" id="closePrescModalBtn" aria-label="Close dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="newPrescForm" novalidate>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: var(--space-4);">
+          <div id="prescModalAlert" class="auth-alert auth-alert-error hidden"></div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-group">
+              <label class="form-label" for="selectPatient">
+                Patient <span class="required-indicator">*</span>
+              </label>
+              <select id="selectPatient" name="patient_id" class="form-select" required>
+                <option value="">Select patient...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="selectAppointment">Linked Appointment (Optional)</label>
+              <select id="selectAppointment" name="appointment_id" class="form-select">
+                <option value="">None / Direct Consultation</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prescDiagnosis">Clinical Diagnosis <span class="required-indicator">*</span></label>
+            <input type="text" id="prescDiagnosis" name="diagnosis" class="form-control" placeholder="e.g. Type 2 Diabetes Mellitus" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prescNotes">Dietary / Treatment Advice (Optional)</label>
+            <textarea id="prescNotes" name="notes" class="form-textarea" placeholder="Special patient instructions, fluid intake, exercise recommendations..."></textarea>
+          </div>
+
+          <!-- Dynamic Medication Items Section -->
+          <div>
+            <div class="flex justify-between items-center" style="margin-bottom: var(--space-2);">
+              <h4 style="font-size: 0.95rem;">Medication Items</h4>
+              <button type="button" id="addMedicationRowBtn" class="btn btn-outline btn-sm">
+                + Add Medication
+              </button>
+            </div>
+
+            <div id="medicationItemsContainer" class="flex flex-col gap-3">
+              <!-- Dynamically populated rows -->
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="cancelPrescModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitPrescBtn">
+            <span id="prescBtnText">Issue Prescription</span>
+            <span id="prescSpinner" class="spinner hidden" style="border-top-color: white;"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Prescription Details Modal -->
+  <div class="modal-backdrop" id="viewPrescriptionModal">
+    <div class="modal-dialog" style="max-width: 680px;">
+      <div class="modal-header">
+        <div>
+          <h3 class="card-title" id="viewPrescTitle">Prescription Details</h3>
+          <span style="font-size: 0.8rem; color: var(--color-text-subtle);" id="viewPrescMeta"></span>
+        </div>
+        <button class="btn-icon" id="closeViewPrescModal" aria-label="Close dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-body flex flex-col gap-4">
+        <div style="background-color: var(--color-bg-subtle); padding: var(--space-4); border-radius: var(--radius-md);">
+          <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: 4px;">
+            Clinical Diagnosis
+          </div>
+          <div id="viewPrescDiagnosis" style="font-size: 1.05rem; font-weight: 600; color: var(--color-text-main);"></div>
+        </div>
+
+        <div>
+          <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: var(--space-2); color: var(--color-text-main);">
+            Prescribed Medications
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Medication</th>
+                  <th>Dosage</th>
+                  <th>Frequency</th>
+                  <th>Duration</th>
+                  <th>Instructions</th>
+                </tr>
+              </thead>
+              <tbody id="viewPrescItemsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="background-color: var(--color-bg-subtle); padding: var(--space-4); border-radius: var(--radius-md);">
+          <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: 4px;">
+            Clinical & Dietary Instructions
+          </div>
+          <p id="viewPrescNotes" style="margin: 0; font-size: 0.875rem; line-height: 1.5; color: var(--color-text-main);"></p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="closeViewPrescBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Auth } from '../../js/auth.js';
+    import { api } from '../../js/api-client.js';
+    import { initAppLayout } from '../../js/components.js';
+    import { Validation } from '../../js/validation.js';
+    import { formatDate, escapeHtml, renderStatusBadge, renderEmptyState, showToast } from '../../js/ui.js';
+
+    const user = await Auth.guardRoute(['DOCTOR', 'ADMIN']);
+    if (!user) throw new Error('Unauthorized');
+
+    await initAppLayout({
+      title: 'Issue Prescriptions',
+      subtitle: 'Author clinical prescriptions and itemized medication guidelines',
+    });
+
+    const statusFilter = document.getElementById('statusFilter');
+    statusFilter.addEventListener('change', loadPrescriptions);
+
+    loadPrescriptions();
+    populateSelects();
+
+    async function loadPrescriptions() {
+      const tbody = document.getElementById('prescriptionsTableBody');
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding: 2.5rem;"><div class="spinner"></div></td></tr>`;
+
+      const params = {};
+      if (statusFilter.value) params.status = statusFilter.value;
+
+      try {
+        const res = await api.get('/prescriptions/', params);
+        const list = res.results || [];
+
+        if (list.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7">
+                ${renderEmptyState({
+                  title: 'No Prescriptions Issued',
+                  message: 'No prescription records found under this filter.',
+                  actionText: 'Issue First Prescription',
+                  actionId: 'emptyIssueBtn',
+                })}
+              </td>
+            </tr>
+          `;
+          const emptyIssue = document.getElementById('emptyIssueBtn');
+          if (emptyIssue) emptyIssue.onclick = openModal;
+          return;
+        }
+
+        tbody.innerHTML = list.map(p => {
+          const patientName = p.patient?.user?.first_name ? `${p.patient.user.first_name} ${p.patient.user.last_name}` : p.patient?.user?.username || 'Patient';
+          return `
+            <tr>
+              <td><span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text-subtle);">#RX-${p.id}</span></td>
+              <td><strong>${escapeHtml(patientName)}</strong></td>
+              <td>${escapeHtml(p.diagnosis)}</td>
+              <td><span class="badge badge-neutral">${p.items?.length || 0} meds</span></td>
+              <td>${formatDate(p.issued_at || p.created_at)}</td>
+              <td>${renderStatusBadge(p.status)}</td>
+              <td>
+                <button class="btn btn-outline btn-sm view-presc-detail" data-presc='${JSON.stringify(p)}'>
+                  View Details
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        tbody.querySelectorAll('.view-presc-detail').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const p = JSON.parse(btn.dataset.presc);
+            openViewPrescModal(p);
+          });
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-danger text-center">Failed to load prescriptions: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    // View Prescription Modal Handling
+    const viewModal = document.getElementById('viewPrescriptionModal');
+    function openViewPrescModal(p) {
+      document.getElementById('viewPrescTitle').textContent = `Prescription #RX-${p.id}`;
+      document.getElementById('viewPrescMeta').textContent = `Issued: ${formatDate(p.issued_at || p.created_at)} • Status: ${p.status}`;
+      document.getElementById('viewPrescDiagnosis').textContent = p.diagnosis || 'Clinical Prescription';
+      document.getElementById('viewPrescNotes').textContent = p.notes || 'No specific clinical or dietary notes provided.';
+
+      const tbody = document.getElementById('viewPrescItemsTbody');
+      if (p.items && p.items.length > 0) {
+        tbody.innerHTML = p.items.map(item => `
+          <tr>
+            <td><strong>${escapeHtml(item.medication_name)}</strong></td>
+            <td>${escapeHtml(item.dosage)}</td>
+            <td>${escapeHtml(item.frequency)}</td>
+            <td>${escapeHtml(item.duration)}</td>
+            <td style="font-size: 0.8rem; color: var(--color-text-muted);">${escapeHtml(item.instructions || '—')}</td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="padding: 1.5rem; color: var(--color-text-muted);">No medication items recorded.</td></tr>`;
+      }
+
+      viewModal.classList.add('active');
+    }
+
+    function closeViewPrescModal() {
+      viewModal.classList.remove('active');
+    }
+
+    document.getElementById('closeViewPrescModal').onclick = closeViewPrescModal;
+    document.getElementById('closeViewPrescBtn').onclick = closeViewPrescModal;
+
+    async function populateSelects() {
+      // Patients
+      try {
+        const pRes = await api.get('/patients/', { page_size: 50 });
+        const patients = pRes.results || [];
+        const pSelect = document.getElementById('selectPatient');
+        patients.forEach(p => {
+          const u = p.user || {};
+          const name = u.first_name ? `${u.first_name} ${u.last_name}` : u.username;
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = `${name} (PAT-${p.id})`;
+          pSelect.appendChild(opt);
+        });
+
+        // Check if patient_id in URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramPatientId = urlParams.get('patient_id');
+        if (paramPatientId) {
+          openModal(paramPatientId);
+        }
+      } catch {}
+
+      // Appointments
+      try {
+        const aRes = await api.get('/appointments/', { page_size: 50 });
+        const appts = aRes.results || [];
+        const aSelect = document.getElementById('selectAppointment');
+        const pSelect = document.getElementById('selectPatient');
+
+        appts.forEach(a => {
+          const opt = document.createElement('option');
+          opt.value = a.id;
+          opt.dataset.patientId = a.patient?.id || '';
+          opt.textContent = `Appt #${a.id} on ${a.appointment_date} with ${a.patient?.user?.first_name ? `${a.patient.user.first_name} ${a.patient.user.last_name || ''}`.trim() : a.patient?.user?.username || 'Patient'}`;
+          aSelect.appendChild(opt);
+        });
+
+        // Couple appointment change to auto-select matching patient
+        aSelect.addEventListener('change', () => {
+          const selectedOpt = aSelect.selectedOptions[0];
+          const patId = selectedOpt?.dataset?.patientId;
+          if (patId) {
+            pSelect.value = patId;
+          }
+        });
+
+        // When patient changes, clear mismatched appointment
+        pSelect.addEventListener('change', () => {
+          const patId = pSelect.value;
+          const curApptOpt = aSelect.selectedOptions[0];
+          if (curApptOpt && curApptOpt.dataset.patientId && curApptOpt.dataset.patientId !== patId) {
+            aSelect.value = '';
+          }
+        });
+      } catch {}
+    }
+
+    // Dynamic Medication Rows
+    const medContainer = document.getElementById('medicationItemsContainer');
+    document.getElementById('addMedicationRowBtn').addEventListener('click', () => addMedicationRow());
+
+    function addMedicationRow(name = '', dosage = '', freq = '', duration = '', instructions = '') {
+      const row = document.createElement('div');
+      row.className = 'medication-row';
+      row.style.background = 'var(--color-bg-subtle)';
+      row.style.padding = 'var(--space-3)';
+      row.style.borderRadius = 'var(--radius-md)';
+      row.style.position = 'relative';
+
+      row.innerHTML = `
+        <div class="grid grid-cols-4 gap-2" style="margin-bottom: 6px;">
+          <div>
+            <label class="form-label" style="font-size: 0.7rem;">Medication Name *</label>
+            <input type="text" class="form-control med-name" placeholder="e.g. Metformin" value="${escapeHtml(name)}" required>
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 0.7rem;">Dosage *</label>
+            <input type="text" class="form-control med-dosage" placeholder="e.g. 500mg" value="${escapeHtml(dosage)}" required>
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 0.7rem;">Frequency *</label>
+            <input type="text" class="form-control med-freq" placeholder="e.g. Twice daily" value="${escapeHtml(freq)}" required>
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 0.7rem;">Duration *</label>
+            <input type="text" class="form-control med-duration" placeholder="e.g. 30 days" value="${escapeHtml(duration)}" required>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="text" class="form-control med-instructions" placeholder="Special intake instructions (e.g. after meals with water)..." value="${escapeHtml(instructions)}" style="font-size: 0.8rem;">
+          <button type="button" class="btn btn-outline btn-sm text-danger remove-row-btn" style="padding: 0.4rem 0.6rem;">Remove</button>
+        </div>
+      `;
+
+      row.querySelector('.remove-row-btn').onclick = () => {
+        if (medContainer.querySelectorAll('.medication-row').length > 1) {
+          row.remove();
+        } else {
+          showToast('A prescription must contain at least one medication item.', 'warning');
+        }
+      };
+
+      medContainer.appendChild(row);
+    }
+
+    // Modal Handling
+    const modal = document.getElementById('newPrescModal');
+    const form = document.getElementById('newPrescForm');
+    const modalAlert = document.getElementById('prescModalAlert');
+
+    function openModal(preselectedPatientId = null) {
+      form.reset();
+      if (preselectedPatientId) {
+        document.getElementById('selectPatient').value = preselectedPatientId;
+      }
+      modalAlert.classList.add('hidden');
+      Validation.clearFieldErrors(form);
+
+      medContainer.innerHTML = '';
+      addMedicationRow('Amoxicillin', '500mg', 'Three times daily after food', '5 days', 'Complete full course');
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+    }
+
+    document.getElementById('openNewPrescModalBtn').onclick = () => openModal();
+    document.getElementById('closePrescModalBtn').onclick = closeModal;
+    document.getElementById('cancelPrescModalBtn').onclick = closeModal;
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (modal.classList.contains('active')) closeModal();
+        if (viewModal.classList.contains('active')) closeViewPrescModal();
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      modalAlert.classList.add('hidden');
+      Validation.clearFieldErrors(form);
+
+      const patientId = parseInt(document.getElementById('selectPatient').value, 10);
+      const apptId = document.getElementById('selectAppointment').value ? parseInt(document.getElementById('selectAppointment').value, 10) : null;
+      const diagnosis = document.getElementById('prescDiagnosis').value.trim();
+      const notes = document.getElementById('prescNotes').value.trim();
+
+      if (!patientId) {
+        Validation.setFieldError(document.getElementById('selectPatient'), 'Please select a patient.');
+        return;
+      }
+      if (!diagnosis) {
+        Validation.setFieldError(document.getElementById('prescDiagnosis'), 'Clinical diagnosis is required.');
+        return;
+      }
+
+      // Collect items
+      const rows = medContainer.querySelectorAll('.medication-row');
+      const items = [];
+      let hasItemError = false;
+
+      rows.forEach(r => {
+        const medName = r.querySelector('.med-name').value.trim();
+        const dosage = r.querySelector('.med-dosage').value.trim();
+        const freq = r.querySelector('.med-freq').value.trim();
+        const duration = r.querySelector('.med-duration').value.trim();
+        const instructions = r.querySelector('.med-instructions').value.trim();
+
+        if (!medName || !dosage || !freq || !duration) {
+          hasItemError = true;
+        } else {
+          items.push({
+            medication_name: medName,
+            dosage: dosage,
+            frequency: freq,
+            duration: duration,
+            instructions: instructions,
+          });
+        }
+      });
+
+      if (hasItemError || items.length === 0) {
+        modalAlert.textContent = 'Please complete all required medication fields (name, dosage, frequency, duration).';
+        modalAlert.classList.remove('hidden');
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitPrescBtn');
+      const btnText = document.getElementById('prescBtnText');
+      const spinner = document.getElementById('prescSpinner');
+
+      submitBtn.disabled = true;
+      btnText.textContent = 'Issuing...';
+      spinner.classList.remove('hidden');
+
+      try {
+        const payload = {
+          patient_id: patientId,
+          appointment_id: apptId,
+          diagnosis: diagnosis,
+          notes: notes,
+          items: items,
+        };
+
+        await api.post('/prescriptions/', payload);
+        showToast('Prescription issued and patient notified!', 'success');
+        closeModal();
+        loadPrescriptions();
+      } catch (err) {
+        modalAlert.textContent = err.message || 'Failed to issue prescription.';
+        modalAlert.classList.remove('hidden');
+        if (err.details) {
+          Validation.applyServerErrors(form, err.details);
+        }
+      } finally {
+        submitBtn.disabled = false;
+        btnText.textContent = 'Issue Prescription';
+        spinner.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
