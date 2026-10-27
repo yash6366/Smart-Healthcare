@@ -10,29 +10,33 @@
       }
     },
     {
+      "src": "backend/staticfiles/**",
+      "use": "@vercel/static"
+    },
+    {
       "src": "frontend/**",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "^/api(/.*)?$",
       "dest": "backend/config/wsgi.py"
     },
     {
-      "src": "/admin/(.*)",
+      "src": "^/admin(/.*)?$",
       "dest": "backend/config/wsgi.py"
     },
     {
-      "src": "/static/(.*)",
-      "dest": "backend/config/wsgi.py"
+      "src": "^/static/(.*)$",
+      "dest": "backend/staticfiles/$1"
     },
     {
-      "src": "/frontend/(.*)",
+      "src": "^/frontend/(.*)$",
       "dest": "frontend/$1"
     },
     {
-      "src": "/(.*)",
+      "src": "^/(.*)$",
       "dest": "frontend/$1"
     }
   ],

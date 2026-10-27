@@ -8,8 +8,6 @@ __pycache__/
 .coverage
 htmlcov/
 backend/tests/
-backend/.env
-backend/.env.local
 backend/db.sqlite3
 *.log
 docs/
