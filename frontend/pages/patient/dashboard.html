@@ -20,7 +20,7 @@
     <main class="app-main">
       <div class="app-content">
         <!-- Welcome Banner -->
-        <div style="background: linear-gradient(135deg, var(--color-primary-subtle) 0%, #e0f2fe 100%); border: 1px solid var(--color-primary-border); border-radius: var(--radius-xl); padding: var(--space-8); margin-bottom: var(--space-8); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-4);">
+        <div class="dashboard-welcome-banner" style="background: linear-gradient(135deg, var(--color-primary-subtle) 0%, #e0f2fe 100%); border: 1px solid var(--color-primary-border);">
           <div>
             <span class="badge badge-confirmed" style="margin-bottom: var(--space-2);">Patient Portal Active</span>
             <h2 style="font-size: 1.75rem; margin-bottom: var(--space-2); color: var(--color-text-main);">
@@ -30,7 +30,7 @@
               Manage your healthcare consultations, review authorized electronic health records, and connect with clinical specialists.
             </p>
           </div>
-          <div class="flex gap-3">
+          <div class="dashboard-banner-actions">
             <a href="doctors.html" class="btn btn-primary">Find a Doctor</a>
             <a href="ai-assistant.html" class="btn btn-outline" style="background: white;">Ask AI Assistant</a>
           </div>
@@ -89,15 +89,15 @@
             <a href="appointments.html" class="btn btn-outline btn-sm">View All Appointments</a>
           </div>
           <div class="card-body" style="padding: 0;">
-            <div class="table-container" style="border: none; box-shadow: none;">
+            <div class="table-container" role="region" aria-label="Upcoming consultations list" tabindex="0" style="border: none; box-shadow: none;">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Doctor</th>
-                    <th>Specialization</th>
-                    <th>Date & Time</th>
-                    <th>Status</th>
-                    <th>Action</th>
+                    <th scope="col">Doctor</th>
+                    <th scope="col">Specialization</th>
+                    <th scope="col">Date & Time</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Action</th>
                   </tr>
                 </thead>
                 <tbody id="upcomingAppointmentsTable">

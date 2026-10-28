@@ -24,8 +24,8 @@
         <div class="card" style="margin-bottom: var(--space-8); padding: var(--space-5);">
           <div class="action-toolbar" style="margin-bottom: 0;">
             <div class="search-box" style="flex: 1; min-width: 260px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
-              <input type="text" id="patientSearchInput" class="form-control" placeholder="Search patient by name or email address...">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+              <input type="text" id="patientSearchInput" class="form-control" placeholder="Search patient by name or email address..." aria-label="Search patient by name or email address">
             </div>
             <button id="resetSearchBtn" class="btn btn-outline btn-sm">Clear Filter</button>
           </div>
@@ -34,18 +34,18 @@
         <!-- Table Card -->
         <div class="card">
           <div class="card-body" style="padding: 0;">
-            <div class="table-container" style="border: none; box-shadow: none;">
+            <div class="table-container" role="region" aria-label="Patients registry table" tabindex="0" style="border: none; box-shadow: none;">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Patient ID</th>
-                    <th>Patient Name</th>
-                    <th>Email Address</th>
-                    <th>Phone</th>
-                    <th>Blood Group</th>
-                    <th>Gender / DOB</th>
-                    <th>Location</th>
-                    <th>Registered At</th>
+                    <th scope="col">Patient ID</th>
+                    <th scope="col">Patient Name</th>
+                    <th scope="col">Email Address</th>
+                    <th scope="col">Phone</th>
+                    <th scope="col">Blood Group</th>
+                    <th scope="col">Gender / DOB</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Registered At</th>
                   </tr>
                 </thead>
                 <tbody id="adminPatientsTbody">

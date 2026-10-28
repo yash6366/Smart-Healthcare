@@ -23,7 +23,7 @@
         <!-- Toolbar Filters -->
         <div class="action-toolbar">
           <div class="filter-group">
-            <select id="statusFilter" class="form-select" style="width: auto; min-width: 180px;">
+            <select id="statusFilter" class="form-select" style="width: auto; min-width: 180px;" aria-label="Filter appointments by status">
               <option value="">All Statuses</option>
               <option value="PENDING">Pending</option>
               <option value="CONFIRMED">Confirmed</option>
@@ -32,7 +32,7 @@
               <option value="REJECTED">Rejected</option>
             </select>
 
-            <input type="date" id="dateFilter" class="form-control" style="width: auto;">
+            <input type="date" id="dateFilter" class="form-control" style="width: auto;" aria-label="Filter appointments by date">
             <button id="resetFilterBtn" class="btn btn-outline btn-sm">Reset</button>
           </div>
         </div>
@@ -40,18 +40,18 @@
         <!-- Table Card -->
         <div class="card">
           <div class="card-body" style="padding: 0;">
-            <div class="table-container" style="border: none; box-shadow: none;">
+            <div class="table-container" role="region" aria-label="Global appointments administration list" tabindex="0" style="border: none; box-shadow: none;">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>ID</th>
-                    <th>Patient</th>
-                    <th>Doctor</th>
-                    <th>Scheduled Slot</th>
-                    <th>Duration</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Admin Actions</th>
+                    <th scope="col">ID</th>
+                    <th scope="col">Patient</th>
+                    <th scope="col">Doctor</th>
+                    <th scope="col">Scheduled Slot</th>
+                    <th scope="col">Duration</th>
+                    <th scope="col">Reason</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Admin Actions</th>
                   </tr>
                 </thead>
                 <tbody id="adminApptsTbody">

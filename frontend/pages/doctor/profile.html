@@ -32,21 +32,21 @@
 
           <form id="doctorProfileForm" novalidate>
             <div class="card-body">
-              <div id="profileAlert" class="auth-alert hidden"></div>
+              <div id="profileAlert" class="auth-alert hidden" role="alert" aria-live="assertive"></div>
 
               <div class="grid grid-cols-2 gap-4">
                 <div class="form-group">
                   <label class="form-label" for="displayName">
-                    Display Name <span class="required-indicator">*</span>
+                    Display Name <span class="required-indicator" aria-hidden="true">*</span>
                   </label>
-                  <input type="text" id="displayName" name="display_name" class="form-control" required>
+                  <input type="text" id="displayName" name="display_name" class="form-control" required aria-required="true">
                 </div>
 
                 <div class="form-group">
                   <label class="form-label" for="specialization">
-                    Clinical Specialization <span class="required-indicator">*</span>
+                    Clinical Specialization <span class="required-indicator" aria-hidden="true">*</span>
                   </label>
-                  <select id="specialization" name="specialization" class="form-select" required></select>
+                  <select id="specialization" name="specialization" class="form-select" required aria-required="true"></select>
                 </div>
               </div>
 
@@ -116,21 +116,21 @@
           </div>
           <form id="passwordForm" novalidate>
             <div class="card-body">
-              <div id="passwordAlert" class="auth-alert hidden"></div>
+              <div id="passwordAlert" class="auth-alert hidden" role="alert" aria-live="assertive"></div>
 
               <div class="form-group">
-                <label class="form-label" for="oldPassword">Current Password <span class="required-indicator">*</span></label>
-                <input type="password" id="oldPassword" name="old_password" class="form-control" required>
+                <label class="form-label" for="oldPassword">Current Password <span class="required-indicator" aria-hidden="true">*</span></label>
+                <input type="password" id="oldPassword" name="old_password" class="form-control" required aria-required="true">
               </div>
 
               <div class="grid grid-cols-2 gap-4">
                 <div class="form-group">
-                  <label class="form-label" for="newPassword">New Password <span class="required-indicator">*</span></label>
-                  <input type="password" id="newPassword" name="new_password" class="form-control" required>
+                  <label class="form-label" for="newPassword">New Password <span class="required-indicator" aria-hidden="true">*</span></label>
+                  <input type="password" id="newPassword" name="new_password" class="form-control" required aria-required="true">
                 </div>
                 <div class="form-group">
-                  <label class="form-label" for="newPasswordConfirm">Confirm New Password <span class="required-indicator">*</span></label>
-                  <input type="password" id="newPasswordConfirm" name="new_password_confirm" class="form-control" required>
+                  <label class="form-label" for="newPasswordConfirm">Confirm New Password <span class="required-indicator" aria-hidden="true">*</span></label>
+                  <input type="password" id="newPasswordConfirm" name="new_password_confirm" class="form-control" required aria-required="true">
                 </div>
               </div>
             </div>

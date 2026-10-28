@@ -23,20 +23,20 @@
         <!-- Action Toolbar -->
         <div class="action-toolbar">
           <div class="filter-group">
-            <select id="unreadFilter" class="form-select" style="width: auto;">
+            <select id="unreadFilter" class="form-select" style="width: auto;" aria-label="Filter notifications by read status">
               <option value="">All Notifications</option>
               <option value="true" selected>Unread Only</option>
             </select>
           </div>
 
           <button id="markAllReadBtn" class="btn btn-outline btn-sm">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
             Mark All as Read
           </button>
         </div>
 
         <!-- Notifications Container -->
-        <div id="notificationsList" class="flex flex-col gap-3">
+        <div id="notificationsList" class="flex flex-col gap-3" role="feed" aria-label="Notifications list">
           <div class="text-center" style="padding: 3rem;"><div class="spinner"></div></div>
         </div>
       </div>

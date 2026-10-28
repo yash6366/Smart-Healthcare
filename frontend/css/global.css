@@ -27,7 +27,31 @@ strong, b {
 
 /* Accessible focus ring */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+}
+
+/* Skip to main content link for keyboard & screen reader accessibility */
+.skip-link {
+  position: absolute;
+  top: -9999px;
+  left: 1rem;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+  z-index: 99999;
+  text-decoration: none;
+  box-shadow: var(--shadow-lg);
+  transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+  top: 1rem;
+  outline: 3px solid #ffffff;
   outline-offset: 2px;
 }
 
@@ -135,4 +159,102 @@ strong, b {
   background-color: var(--color-bg-subtle);
   color: var(--color-text-muted);
   border: 1px solid var(--color-bg-muted);
+}
+
+/* Reduced Motion Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   Clinical Print Stylesheet (Prescriptions, Medical Records, Audit Slips)
+   ========================================================================== */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+  }
+
+  /* Hide app navigation and interactive controls when printing */
+  .app-sidebar,
+  .app-topbar,
+  .btn,
+  .btn-icon,
+  .action-toolbar,
+  .sidebar-backdrop,
+  .toast-container,
+  .modal-close,
+  .modal-footer,
+  .notification-btn,
+  #mobileMenuToggle,
+  .skip-link {
+    display: none !important;
+  }
+
+  .app-main {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app-content {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    page-break-inside: avoid;
+  }
+
+  /* Modal printing for Prescription View */
+  .modal-backdrop.active {
+    position: static !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .modal-backdrop.active .modal-dialog {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    transform: none !important;
+  }
+
+  .data-table {
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  .data-table th {
+    background-color: #f1f5f9 !important;
+    color: #000000 !important;
+  }
+
+  .data-table td {
+    color: #000000 !important;
+  }
+
+  .badge {
+    border: 1px solid #000000 !important;
+    color: #000000 !important;
+    background: transparent !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+}
+
+.print-only {
+  display: none !important;
 }

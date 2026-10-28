@@ -21,7 +21,7 @@
     <main class="app-main">
       <div class="app-content">
         <!-- Doctor Header & Availability Bar -->
-        <div style="background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%); color: white; border-radius: var(--radius-xl); padding: var(--space-8); margin-bottom: var(--space-8); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-4); box-shadow: var(--shadow-md);">
+        <div class="dashboard-welcome-banner" style="background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%); color: white; box-shadow: var(--shadow-md);">
           <div>
             <div class="flex items-center gap-2" style="margin-bottom: var(--space-2);">
               <span class="badge" id="doctorVerifiedBadge" style="background: rgba(255,255,255,0.2); color: white; border-color: rgba(255,255,255,0.3);">Verified Practitioner</span>
@@ -35,7 +35,7 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-3">
+          <div class="dashboard-banner-actions">
             <button id="toggleAvailabilityBtn" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;">
               Availability: <strong id="availabilityStatusText">Active</strong>
             </button>
@@ -97,15 +97,15 @@
           </div>
 
           <div class="card-body" style="padding: 0;">
-            <div class="table-container" style="border: none; box-shadow: none;">
+            <div class="table-container" role="region" aria-label="Pending consultation requests" tabindex="0" style="border: none; box-shadow: none;">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Patient</th>
-                    <th>Requested Date & Time</th>
-                    <th>Symptoms / Reason</th>
-                    <th>Duration</th>
-                    <th>Decision</th>
+                    <th scope="col">Patient</th>
+                    <th scope="col">Requested Date & Time</th>
+                    <th scope="col">Symptoms / Reason</th>
+                    <th scope="col">Duration</th>
+                    <th scope="col">Decision</th>
                   </tr>
                 </thead>
                 <tbody id="pendingRequestsTbody">
@@ -129,15 +129,15 @@
           </div>
 
           <div class="card-body" style="padding: 0;">
-            <div class="table-container" style="border: none; box-shadow: none;">
+            <div class="table-container" role="region" aria-label="Confirmed consultations list" tabindex="0" style="border: none; box-shadow: none;">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Patient</th>
-                    <th>Consultation Slot</th>
-                    <th>Primary Reason</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th scope="col">Patient</th>
+                    <th scope="col">Consultation Slot</th>
+                    <th scope="col">Primary Reason</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="confirmedApptsTbody">

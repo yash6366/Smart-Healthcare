@@ -42,6 +42,10 @@
   gap: var(--space-3);
 }
 
+.landing-menu-btn {
+  display: none;
+}
+
 /* Hero Section */
 .hero-section {
   padding: var(--space-16) 0 var(--space-12);

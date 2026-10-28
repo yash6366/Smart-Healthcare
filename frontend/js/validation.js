@@ -27,6 +27,11 @@ export const Validation = {
     if (!formElement) return;
     formElement.querySelectorAll('.is-invalid').forEach((el) => {
       el.classList.remove('is-invalid');
+      el.removeAttribute('aria-invalid');
+      const describedBy = el.getAttribute('aria-describedby') || '';
+      if (describedBy.includes('-feedback')) {
+        el.removeAttribute('aria-describedby');
+      }
     });
     formElement.querySelectorAll('.invalid-feedback').forEach((el) => {
       el.remove();
@@ -36,21 +41,30 @@ export const Validation = {
   setFieldError(inputElement, errorMessage) {
     if (!inputElement) return;
     inputElement.classList.add('is-invalid');
+    inputElement.setAttribute('aria-invalid', 'true');
+
+    const feedbackId = `${inputElement.id || inputElement.name || 'field'}-feedback`;
+    inputElement.setAttribute('aria-describedby', feedbackId);
 
     // Remove existing feedback if any
     const parent = inputElement.closest('.form-group') || inputElement.parentElement;
     const existingFeedback = parent.querySelector('.invalid-feedback');
     if (existingFeedback) {
       existingFeedback.textContent = errorMessage;
+      existingFeedback.id = feedbackId;
     } else {
       const feedback = document.createElement('div');
       feedback.className = 'invalid-feedback';
+      feedback.id = feedbackId;
+      feedback.setAttribute('role', 'alert');
       feedback.textContent = errorMessage;
       parent.appendChild(feedback);
     }
 
     const clearThis = () => {
       inputElement.classList.remove('is-invalid');
+      inputElement.removeAttribute('aria-invalid');
+      inputElement.removeAttribute('aria-describedby');
       const p = inputElement.closest('.form-group') || inputElement.parentElement;
       if (p) {
         const fb = p.querySelector('.invalid-feedback');

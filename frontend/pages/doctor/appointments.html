@@ -30,7 +30,7 @@
               </span>
             </div>
             <div class="flex items-center gap-2">
-              <input type="date" id="scheduleDateInput" class="form-control" style="width: auto; font-size: 0.8rem;">
+              <input type="date" id="scheduleDateInput" class="form-control" style="width: auto; font-size: 0.8rem;" aria-label="Select date for daily schedule view">
               <button type="button" id="todayScheduleBtn" class="btn btn-outline btn-sm">Today</button>
             </div>
           </div>
@@ -52,7 +52,7 @@
         <!-- Filter Toolbar -->
         <div class="action-toolbar">
           <div class="filter-group">
-            <select id="statusFilter" class="form-select" style="width: auto; min-width: 180px;">
+            <select id="statusFilter" class="form-select" style="width: auto; min-width: 180px;" aria-label="Filter appointments by status">
               <option value="">All Statuses</option>
               <option value="PENDING">Pending Confirmation</option>
               <option value="CONFIRMED">Confirmed</option>
@@ -61,7 +61,7 @@
               <option value="REJECTED">Rejected</option>
             </select>
 
-            <input type="date" id="dateFilter" class="form-control" style="width: auto;" title="Filter by date">
+            <input type="date" id="dateFilter" class="form-control" style="width: auto;" title="Filter by date" aria-label="Filter appointments by date">
             <button id="resetFilterBtn" class="btn btn-outline btn-sm">Reset Filters</button>
           </div>
         </div>
@@ -69,17 +69,17 @@
         <!-- Appointments Table Card -->
         <div class="card">
           <div class="card-body" style="padding: 0;">
-            <div class="table-container" style="border: none; box-shadow: none;">
+            <div class="table-container" role="region" aria-label="Doctor appointments list" tabindex="0" style="border: none; box-shadow: none;">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>ID</th>
-                    <th>Patient</th>
-                    <th>Slot Date & Time</th>
-                    <th>Duration</th>
-                    <th>Symptoms / Reason</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th scope="col">ID</th>
+                    <th scope="col">Patient</th>
+                    <th scope="col">Slot Date & Time</th>
+                    <th scope="col">Duration</th>
+                    <th scope="col">Symptoms / Reason</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="doctorApptsTableBody">
@@ -97,7 +97,7 @@
 
   <!-- Rejection / Reason Modal -->
   <div class="modal-backdrop" id="decisionModal">
-    <div class="modal-dialog" style="max-width: 480px;">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="decisionModalTitle" aria-describedby="decisionModalNotice" style="max-width: 480px;">
       <div class="modal-header">
         <h3 class="card-title" id="decisionModalTitle">Appointment Decision</h3>
         <button class="btn-icon" id="closeDecisionModal" aria-label="Close dialog">

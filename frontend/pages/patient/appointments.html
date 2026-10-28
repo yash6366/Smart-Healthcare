@@ -23,7 +23,7 @@
         <!-- Toolbar & Filter -->
         <div class="action-toolbar">
           <div class="filter-group">
-            <select id="statusFilter" class="form-select" style="width: auto; min-width: 180px;">
+            <select id="statusFilter" class="form-select" style="width: auto; min-width: 180px;" aria-label="Filter appointments by status">
               <option value="">All Statuses</option>
               <option value="PENDING">Pending Confirmation</option>
               <option value="CONFIRMED">Confirmed</option>
@@ -34,7 +34,7 @@
           </div>
 
           <a href="doctors.html" class="btn btn-primary btn-sm">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
             Book New Consultation
           </a>
         </div>
@@ -42,17 +42,17 @@
         <!-- Appointments Table Card -->
         <div class="card">
           <div class="card-body" style="padding: 0;">
-            <div class="table-container" style="border: none; box-shadow: none;">
+            <div class="table-container" role="region" aria-label="Appointments list" tabindex="0" style="border: none; box-shadow: none;">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Appointment ID</th>
-                    <th>Doctor</th>
-                    <th>Specialization</th>
-                    <th>Date & Time</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Action</th>
+                    <th scope="col">Appointment ID</th>
+                    <th scope="col">Doctor</th>
+                    <th scope="col">Specialization</th>
+                    <th scope="col">Date & Time</th>
+                    <th scope="col">Reason</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Action</th>
                   </tr>
                 </thead>
                 <tbody id="appointmentsTableBody">
@@ -72,16 +72,16 @@
 
   <!-- Cancellation Modal Dialog -->
   <div class="modal-backdrop" id="cancelModal">
-    <div class="modal-dialog" style="max-width: 480px;">
+    <div class="modal-dialog" role="alertdialog" aria-modal="true" aria-labelledby="cancelModalTitle" aria-describedby="cancelModalDesc" style="max-width: 480px;">
       <div class="modal-header">
-        <h3 class="card-title text-danger">Cancel Consultation</h3>
+        <h3 class="card-title text-danger" id="cancelModalTitle">Cancel Consultation</h3>
         <button class="btn-icon" id="closeCancelModal" aria-label="Close dialog">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
         </button>
       </div>
 
       <div class="modal-body">
-        <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: var(--space-4);">
+        <p id="cancelModalDesc" style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: var(--space-4);">
           Are you sure you want to cancel this appointment? Your scheduled doctor slot will be released.
         </p>
 

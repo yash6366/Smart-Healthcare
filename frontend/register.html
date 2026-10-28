@@ -17,9 +17,10 @@
   <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
-  <div class="auth-wrapper">
+  <a href="#mainContent" class="skip-link">Skip to main content</a>
+  <main id="mainContent" tabindex="-1" class="auth-wrapper">
     <!-- Visual Brand Panel -->
-    <div class="auth-sidebar-panel">
+    <div class="auth-sidebar-panel" aria-hidden="true">
       <div class="auth-panel-brand">
         <div class="brand-logo">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20M7 7l10 10M17 7 7 17"/></svg>
@@ -50,23 +51,23 @@
       </div>
 
       <!-- Feedback Alert Banner -->
-      <div id="authAlert" class="hidden auth-alert"></div>
+      <div id="authAlert" class="hidden auth-alert" role="alert" aria-live="assertive"></div>
 
       <form id="registerForm" novalidate>
         <div class="grid grid-cols-2 gap-4">
           <div class="form-group">
             <label class="form-label" for="regFirstName">First Name</label>
-            <input type="text" id="regFirstName" name="first_name" class="form-control" placeholder="e.g. John">
+            <input type="text" id="regFirstName" name="first_name" class="form-control" placeholder="e.g. John" autocomplete="given-name">
           </div>
           <div class="form-group">
             <label class="form-label" for="regLastName">Last Name</label>
-            <input type="text" id="regLastName" name="last_name" class="form-control" placeholder="e.g. Doe">
+            <input type="text" id="regLastName" name="last_name" class="form-control" placeholder="e.g. Doe" autocomplete="family-name">
           </div>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="regUsername">
-            Username <span class="required-indicator">*</span>
+            Username <span class="required-indicator" aria-hidden="true">*</span><span class="sr-only"> (required)</span>
           </label>
           <input
             type="text"
@@ -81,7 +82,7 @@
 
         <div class="form-group">
           <label class="form-label" for="regEmail">
-            Email Address <span class="required-indicator">*</span>
+            Email Address <span class="required-indicator" aria-hidden="true">*</span><span class="sr-only"> (required)</span>
           </label>
           <input
             type="email"
@@ -109,7 +110,7 @@
         <div class="grid grid-cols-2 gap-4">
           <div class="form-group">
             <label class="form-label" for="regPassword">
-              Password <span class="required-indicator">*</span>
+              Password <span class="required-indicator" aria-hidden="true">*</span><span class="sr-only"> (required)</span>
             </label>
             <input
               type="password"
@@ -118,13 +119,14 @@
               class="form-control"
               placeholder="Min. 8 characters"
               autocomplete="new-password"
+              aria-describedby="passwordReq"
               required
             >
           </div>
 
           <div class="form-group">
             <label class="form-label" for="regPasswordConfirm">
-              Confirm Password <span class="required-indicator">*</span>
+              Confirm Password <span class="required-indicator" aria-hidden="true">*</span><span class="sr-only"> (required)</span>
             </label>
             <input
               type="password"
@@ -133,18 +135,19 @@
               class="form-control"
               placeholder="Re-enter password"
               autocomplete="new-password"
+              aria-describedby="passwordReq"
               required
             >
           </div>
         </div>
 
-        <div class="password-requirements">
+        <div id="passwordReq" class="password-requirements">
           Password must be at least 8 characters long and cannot be entirely numeric.
         </div>
 
         <button type="submit" id="submitRegisterBtn" class="btn btn-primary" style="width: 100%; padding: 0.8rem; margin-top: var(--space-6);">
           <span id="btnText">Create Patient Account</span>
-          <span id="btnSpinner" class="spinner hidden" style="border-top-color: white; border-color: rgba(255,255,255,0.3);"></span>
+          <span id="btnSpinner" class="spinner hidden" style="border-top-color: white; border-color: rgba(255,255,255,0.3);" aria-hidden="true"></span>
         </button>
       </form>
 
@@ -153,13 +156,13 @@
       </div>
 
       <div class="role-policy-notice">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-info" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-info" style="flex-shrink:0; margin-top:1px;" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
         <div>
           <strong>Physicians & Healthcare Practitioners:</strong> Doctor accounts require administrative provisioning and medical license verification. Please contact platform administration to establish your doctor account.
         </div>
       </div>
     </div>
-  </div>
+  </main>
 
   <script type="module">
     import { Auth } from './js/auth.js';

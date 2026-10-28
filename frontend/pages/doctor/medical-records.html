@@ -23,7 +23,7 @@
         <!-- Toolbar -->
         <div class="action-toolbar">
           <div class="filter-group">
-            <select id="recordTypeFilter" class="form-select" style="width: auto; min-width: 200px;">
+            <select id="recordTypeFilter" class="form-select" style="width: auto; min-width: 200px;" aria-label="Filter records by clinical type">
               <option value="">All Record Types</option>
               <option value="CONSULTATION_NOTE">Consultation Note</option>
               <option value="DIAGNOSIS">Clinical Diagnosis</option>
@@ -35,7 +35,7 @@
           </div>
 
           <button id="openNewRecordModalBtn" class="btn btn-primary btn-sm">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
             Create Clinical Record
           </button>
         </div>
@@ -43,16 +43,16 @@
         <!-- Records Table -->
         <div class="card">
           <div class="card-body" style="padding: 0;">
-            <div class="table-container" style="border: none; box-shadow: none;">
+            <div class="table-container" role="region" aria-label="Doctor clinical records list" tabindex="0" style="border: none; box-shadow: none;">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Record ID</th>
-                    <th>Patient Name</th>
-                    <th>Title & Diagnostic Summary</th>
-                    <th>Record Type</th>
-                    <th>Date Recorded</th>
-                    <th>Actions</th>
+                    <th scope="col">Record ID</th>
+                    <th scope="col">Patient Name</th>
+                    <th scope="col">Title & Diagnostic Summary</th>
+                    <th scope="col">Record Type</th>
+                    <th scope="col">Date Recorded</th>
+                    <th scope="col">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="recordsTableBody">
@@ -70,9 +70,9 @@
 
   <!-- Create Medical Record Modal -->
   <div class="modal-backdrop" id="newRecordModal">
-    <div class="modal-dialog" style="max-width: 600px;">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="createRecordModalTitle" style="max-width: 600px;">
       <div class="modal-header">
-        <h3 class="card-title">Create Clinical Record</h3>
+        <h3 class="card-title" id="createRecordModalTitle">Create Clinical Record</h3>
         <button class="btn-icon" id="closeNewRecordModal" aria-label="Close dialog">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
         </button>
@@ -80,21 +80,21 @@
 
       <form id="newRecordForm" novalidate>
         <div class="modal-body">
-          <div id="recordModalAlert" class="auth-alert auth-alert-error hidden"></div>
+          <div id="recordModalAlert" class="auth-alert auth-alert-error hidden" role="alert" aria-live="assertive"></div>
 
           <div class="form-group">
             <label class="form-label" for="selectPatient">
-              Select Patient <span class="required-indicator">*</span>
+              Select Patient <span class="required-indicator" aria-hidden="true">*</span>
             </label>
-            <select id="selectPatient" name="patient_id" class="form-select" required>
+            <select id="selectPatient" name="patient_id" class="form-select" required aria-required="true">
               <option value="">Choose patient...</option>
             </select>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div class="form-group">
-              <label class="form-label" for="recordType">Record Type <span class="required-indicator">*</span></label>
-              <select id="recordType" name="record_type" class="form-select" required>
+              <label class="form-label" for="recordType">Record Type <span class="required-indicator" aria-hidden="true">*</span></label>
+              <select id="recordType" name="record_type" class="form-select" required aria-required="true">
                 <option value="CONSULTATION_NOTE">Consultation Note</option>
                 <option value="DIAGNOSIS">Clinical Diagnosis</option>
                 <option value="LAB_RESULT">Laboratory Result</option>
@@ -105,14 +105,14 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="recordTitle">Title / Diagnosis <span class="required-indicator">*</span></label>
-              <input type="text" id="recordTitle" name="title" class="form-control" placeholder="e.g. Acute Bronchitis" required>
+              <label class="form-label" for="recordTitle">Title / Diagnosis <span class="required-indicator" aria-hidden="true">*</span></label>
+              <input type="text" id="recordTitle" name="title" class="form-control" placeholder="e.g. Acute Bronchitis" required aria-required="true">
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="recordDesc">Clinical Findings & Notes <span class="required-indicator">*</span></label>
-            <textarea id="recordDesc" name="description" class="form-textarea" placeholder="Detailed clinical evaluation, symptoms observed, diagnostic rationale..." required></textarea>
+            <label class="form-label" for="recordDesc">Clinical Findings & Notes <span class="required-indicator" aria-hidden="true">*</span></label>
+            <textarea id="recordDesc" name="description" class="form-textarea" placeholder="Detailed clinical evaluation, symptoms observed, diagnostic rationale..." required aria-required="true"></textarea>
           </div>
 
           <!-- Structured Clinical Vitals -->
@@ -150,7 +150,7 @@
 
   <!-- View Medical Record Details Modal -->
   <div class="modal-backdrop" id="viewRecordModal">
-    <div class="modal-dialog" style="max-width: 600px;">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="viewModalTitle" style="max-width: 600px;">
       <div class="modal-header">
         <div>
           <h3 class="card-title" id="viewModalTitle">Clinical Record Details</h3>
@@ -194,7 +194,7 @@
     import { api } from '../../js/api-client.js';
     import { initAppLayout } from '../../js/components.js';
     import { Validation } from '../../js/validation.js';
-    import { formatDate, escapeHtml, renderEmptyState, showToast } from '../../js/ui.js';
+    import { formatDate, escapeHtml, renderEmptyState, showToast, renderClinicalVitals } from '../../js/ui.js';
 
     const user = await Auth.guardRoute(['DOCTOR', 'ADMIN']);
     if (!user) throw new Error('Unauthorized');
@@ -283,8 +283,8 @@
       document.getElementById('viewModalDesc').textContent = r.description;
 
       const vDataBox = document.getElementById('viewModalClinicalDataBox');
-      if (r.clinical_data && Object.keys(r.clinical_data).length > 0) {
-        document.getElementById('viewModalClinicalData').textContent = JSON.stringify(r.clinical_data, null, 2);
+      if (r.clinical_data && (typeof r.clinical_data === 'object' ? Object.keys(r.clinical_data).length > 0 : true)) {
+        document.getElementById('viewModalClinicalData').innerHTML = renderClinicalVitals(r.clinical_data);
         vDataBox.classList.remove('hidden');
       } else {
         vDataBox.classList.add('hidden');

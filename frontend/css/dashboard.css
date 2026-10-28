@@ -379,3 +379,23 @@
   gap: var(--space-3);
   flex-wrap: wrap;
 }
+
+/* Dashboard Welcome & Header Banners */
+.dashboard-welcome-banner {
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  margin-bottom: var(--space-8);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.dashboard-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+

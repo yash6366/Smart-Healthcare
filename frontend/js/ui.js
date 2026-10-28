@@ -30,38 +30,47 @@ export const ICONS = {
  */
 let toastContainer = null;
 
-export function showToast(message, type = 'info', duration = 4000) {
+export function showToast(message, type = 'info', duration = 4500) {
   if (!toastContainer) {
     toastContainer = document.createElement('div');
     toastContainer.className = 'toast-container';
+    toastContainer.setAttribute('role', 'region');
+    toastContainer.setAttribute('aria-label', 'System Notifications');
+    toastContainer.setAttribute('aria-live', 'polite');
     document.body.appendChild(toastContainer);
   }
 
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  toast.setAttribute('role', 'alert');
+  toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
 
   let iconSvg = ICONS.records;
   if (type === 'success') iconSvg = ICONS.check;
   if (type === 'error') iconSvg = ICONS.alert;
 
   toast.innerHTML = `
-    <span style="flex-shrink:0;">${iconSvg}</span>
+    <span style="flex-shrink:0;" aria-hidden="true">${iconSvg}</span>
     <span style="flex:1;">${escapeHtml(message)}</span>
+    <button type="button" class="btn-icon" aria-label="Dismiss notification" style="padding:2px; margin-left: var(--space-2); flex-shrink: 0;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+    </button>
   `;
 
-  toastContainer.appendChild(toast);
-
-  setTimeout(() => {
+  const dismissBtn = toast.querySelector('button');
+  const dismiss = () => {
     toast.style.opacity = '0';
     toast.style.transform = 'translateX(100%)';
     toast.style.transition = 'all 200ms ease';
     setTimeout(() => toast.remove(), 250);
-  }, duration);
+  };
+  dismissBtn.onclick = dismiss;
+
+  toastContainer.appendChild(toast);
+  setTimeout(dismiss, duration);
 }
 
 /**
- * Confirmation Dialog
+ * Confirmation Dialog (WCAG Accessible with Focus Trap & Escape handling)
  */
 export function showConfirmDialog({
   title = 'Please Confirm',
@@ -71,17 +80,18 @@ export function showConfirmDialog({
   isDanger = false,
 }) {
   return new Promise((resolve) => {
+    const previousActiveElement = document.activeElement;
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop active';
 
     backdrop.innerHTML = `
-      <div class="modal-dialog" role="dialog" aria-modal="true" style="max-width: 440px;">
+      <div class="modal-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmDialogTitle" aria-describedby="confirmDialogMsg" tabindex="-1" style="max-width: 440px;">
         <div class="modal-header">
-          <h3 class="card-title">${escapeHtml(title)}</h3>
+          <h3 class="card-title" id="confirmDialogTitle">${escapeHtml(title)}</h3>
           <button class="btn-icon modal-close" aria-label="Close dialog">${ICONS.x}</button>
         </div>
         <div class="modal-body">
-          <p style="color: var(--color-text-muted); line-height: 1.5;">${escapeHtml(message)}</p>
+          <p id="confirmDialogMsg" style="color: var(--color-text-muted); line-height: 1.5; margin-bottom: 0;">${escapeHtml(message)}</p>
         </div>
         <div class="modal-footer">
           <button class="btn btn-outline modal-cancel">${escapeHtml(cancelText)}</button>
@@ -91,16 +101,64 @@ export function showConfirmDialog({
     `;
 
     document.body.appendChild(backdrop);
+    const dialog = backdrop.querySelector('.modal-dialog');
+    const cancelBtn = backdrop.querySelector('.modal-cancel');
+    const confirmBtn = backdrop.querySelector('.modal-confirm');
+    const closeBtn = backdrop.querySelector('.modal-close');
+
+    // Focus cancel button by default for safety on danger dialogues
+    setTimeout(() => {
+      if (isDanger) {
+        cancelBtn?.focus();
+      } else {
+        confirmBtn?.focus();
+      }
+    }, 50);
 
     const close = (result) => {
+      document.removeEventListener('keydown', handleKeyDown);
       backdrop.classList.remove('active');
-      setTimeout(() => backdrop.remove(), 200);
+      setTimeout(() => {
+        backdrop.remove();
+        if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+          previousActiveElement.focus();
+        }
+      }, 200);
       resolve(result);
     };
 
-    backdrop.querySelector('.modal-close').onclick = () => close(false);
-    backdrop.querySelector('.modal-cancel').onclick = () => close(false);
-    backdrop.querySelector('.modal-confirm').onclick = () => close(true);
+    // Focus Trap handler
+    const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close(false);
+        return;
+      }
+      if (e.key === 'Tab') {
+        const focusables = Array.from(dialog.querySelectorAll(focusableSelector));
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    closeBtn.onclick = () => close(false);
+    cancelBtn.onclick = () => close(false);
+    confirmBtn.onclick = () => close(true);
     backdrop.onclick = (e) => {
       if (e.target === backdrop) close(false);
     };
@@ -122,23 +180,24 @@ export function showPromptDialog({
   inputType = 'textarea',
 }) {
   return new Promise((resolve) => {
+    const previousActiveElement = document.activeElement;
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop active';
 
     const inputHtml = inputType === 'textarea'
-      ? `<textarea id="promptDialogInput" class="form-control" rows="3" placeholder="${escapeHtml(placeholder)}" style="width:100%; resize:vertical; font-family: inherit;">${escapeHtml(defaultValue)}</textarea>`
-      : `<input id="promptDialogInput" class="form-control" type="text" placeholder="${escapeHtml(placeholder)}" value="${escapeHtml(defaultValue)}" style="width:100%;" />`;
+      ? `<textarea id="promptDialogInput" class="form-control" rows="3" placeholder="${escapeHtml(placeholder)}" aria-describedby="promptDialogError" style="width:100%; resize:vertical; font-family: inherit;">${escapeHtml(defaultValue)}</textarea>`
+      : `<input id="promptDialogInput" class="form-control" type="text" placeholder="${escapeHtml(placeholder)}" value="${escapeHtml(defaultValue)}" aria-describedby="promptDialogError" style="width:100%;" />`;
 
     backdrop.innerHTML = `
-      <div class="modal-dialog" role="dialog" aria-modal="true" style="max-width: 480px;">
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="promptDialogTitle" aria-describedby="promptDialogMsg" tabindex="-1" style="max-width: 480px;">
         <div class="modal-header">
-          <h3 class="card-title">${escapeHtml(title)}</h3>
+          <h3 class="card-title" id="promptDialogTitle">${escapeHtml(title)}</h3>
           <button class="btn-icon modal-close" aria-label="Close dialog">${ICONS.x}</button>
         </div>
         <div class="modal-body" style="display:flex; flex-direction:column; gap: var(--space-3);">
-          <p style="color: var(--color-text-muted); line-height: 1.5; margin-bottom: 0;">${escapeHtml(message)}</p>
+          <p id="promptDialogMsg" style="color: var(--color-text-muted); line-height: 1.5; margin-bottom: 0;">${escapeHtml(message)}</p>
           ${inputHtml}
-          <div id="promptDialogError" style="display:none; color: var(--color-danger); font-size: var(--text-xs); font-weight: 500;"></div>
+          <div id="promptDialogError" role="alert" style="display:none; color: var(--color-danger); font-size: var(--text-xs); font-weight: 500;"></div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-outline modal-cancel">${escapeHtml(cancelText)}</button>
@@ -148,13 +207,24 @@ export function showPromptDialog({
     `;
 
     document.body.appendChild(backdrop);
+    const dialog = backdrop.querySelector('.modal-dialog');
     const inputEl = backdrop.querySelector('#promptDialogInput');
     const errEl = backdrop.querySelector('#promptDialogError');
+    const cancelBtn = backdrop.querySelector('.modal-cancel');
+    const confirmBtn = backdrop.querySelector('.modal-confirm');
+    const closeBtn = backdrop.querySelector('.modal-close');
+
     setTimeout(() => inputEl?.focus(), 50);
 
     const close = (result) => {
+      document.removeEventListener('keydown', handleKeyDown);
       backdrop.classList.remove('active');
-      setTimeout(() => backdrop.remove(), 200);
+      setTimeout(() => {
+        backdrop.remove();
+        if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+          previousActiveElement.focus();
+        }
+      }, 200);
       resolve(result);
     };
 
@@ -165,15 +235,40 @@ export function showPromptDialog({
           errEl.textContent = 'This field is required.';
           errEl.style.display = 'block';
         }
+        inputEl?.setAttribute('aria-invalid', 'true');
         inputEl?.focus();
         return;
       }
       close(val);
     };
 
-    backdrop.querySelector('.modal-close').onclick = () => close(null);
-    backdrop.querySelector('.modal-cancel').onclick = () => close(null);
-    backdrop.querySelector('.modal-confirm').onclick = handleConfirm;
+    const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close(null);
+        return;
+      }
+      if (e.key === 'Tab') {
+        const focusables = Array.from(dialog.querySelectorAll(focusableSelector));
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    closeBtn.onclick = () => close(null);
+    cancelBtn.onclick = () => close(null);
+    confirmBtn.onclick = handleConfirm;
     backdrop.onclick = (e) => {
       if (e.target === backdrop) close(null);
     };
@@ -182,13 +277,10 @@ export function showPromptDialog({
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || inputType !== 'textarea')) {
         e.preventDefault();
         handleConfirm();
-      } else if (e.key === 'Escape') {
-        close(null);
       }
     });
   });
 }
-
 
 /**
  * Status Badge Renderer
@@ -200,7 +292,7 @@ export function renderStatusBadge(status) {
 
   if (s === 'PENDING') {
     badgeClass = 'badge-pending';
-    label = 'Pending Confirmation';
+    label = 'Pending';
   } else if (s === 'CONFIRMED' || s === 'ACTIVE' || s === 'VERIFIED') {
     badgeClass = 'badge-confirmed';
     label = s === 'CONFIRMED' ? 'Confirmed' : s === 'ACTIVE' ? 'Active' : 'Verified';
@@ -212,7 +304,34 @@ export function renderStatusBadge(status) {
     label = s === 'REJECTED' ? 'Rejected' : 'Cancelled';
   }
 
-  return `<span class="badge ${badgeClass}">${escapeHtml(label)}</span>`;
+  return `<span class="badge ${badgeClass}" role="status">${escapeHtml(label)}</span>`;
+}
+
+/**
+ * Accessible Pagination Controls Renderer
+ */
+export function renderPagination({ count = 0, pageSize = 10, currentPage = 1, onPrev = '', onNext = '' }) {
+  const totalPages = Math.ceil(count / pageSize) || 1;
+  if (totalPages <= 1) return '';
+
+  const hasPrev = currentPage > 1;
+  const hasNext = currentPage < totalPages;
+
+  return `
+    <nav class="pagination" aria-label="Pagination Navigation">
+      <div style="font-size: 0.85rem; color: var(--color-text-muted);">
+        Showing page <strong>${currentPage}</strong> of <strong>${totalPages}</strong> (${count} total records)
+      </div>
+      <div class="pagination-controls">
+        <button type="button" class="btn btn-outline btn-sm" id="paginationPrevBtn" ${!hasPrev ? 'disabled aria-disabled="true"' : ''} ${onPrev ? `onclick="${onPrev}"` : ''}>
+          &larr; Previous
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" id="paginationNextBtn" ${!hasNext ? 'disabled aria-disabled="true"' : ''} ${onNext ? `onclick="${onNext}"` : ''}>
+          Next &rarr;
+        </button>
+      </div>
+    </nav>
+  `;
 }
 
 /**
@@ -227,7 +346,7 @@ export function renderEmptyState({
 }) {
   return `
     <div class="empty-state">
-      <div class="empty-icon">${icon}</div>
+      <div class="empty-icon" aria-hidden="true">${icon}</div>
       <h3 class="empty-title">${escapeHtml(title)}</h3>
       <p class="empty-text">${escapeHtml(message)}</p>
       ${actionText && actionId ? `<button id="${actionId}" class="btn btn-primary btn-sm">${escapeHtml(actionText)}</button>` : ''}
@@ -280,3 +399,67 @@ export function formatCurrency(amount) {
   if (amount === undefined || amount === null) return '—';
   return `₹${parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
 }
+
+/**
+ * Clinical Vitals & Metrics Formatter
+ * Formats structured clinical vitals (BP, Heart Rate, SpO2, etc.) into accessible visual cards.
+ */
+export function renderClinicalVitals(data) {
+  if (!data) return '<span style="color: var(--color-text-subtle);">No vitals recorded</span>';
+  let obj = data;
+  if (typeof data === 'string') {
+    try {
+      obj = JSON.parse(data);
+    } catch {
+      return `<pre style="font-size:0.85rem; background:#f8fafc; padding:0.75rem; border-radius:var(--radius-md); overflow-x:auto;">${escapeHtml(data)}</pre>`;
+    }
+  }
+  if (!obj || typeof obj !== 'object' || Object.keys(obj).length === 0) {
+    return '<span style="color: var(--color-text-subtle);">No vitals recorded</span>';
+  }
+
+  // Common clinical mappings
+  const labelMap = {
+    bp: { label: 'Blood Pressure', unit: 'mmHg' },
+    blood_pressure: { label: 'Blood Pressure', unit: 'mmHg' },
+    pulse: { label: 'Pulse Rate', unit: 'bpm' },
+    heart_rate: { label: 'Heart Rate', unit: 'bpm' },
+    temp: { label: 'Body Temp', unit: '°F' },
+    temperature: { label: 'Body Temp', unit: '°F' },
+    spo2: { label: 'SpO2 Oxygen', unit: '%' },
+    oxygen_saturation: { label: 'Oxygen Saturation', unit: '%' },
+    respiratory_rate: { label: 'Resp. Rate', unit: 'breaths/min' },
+    blood_sugar: { label: 'Blood Sugar', unit: 'mg/dL' },
+    glucose: { label: 'Fasting Glucose', unit: 'mg/dL' },
+    weight: { label: 'Weight', unit: 'kg' },
+    height: { label: 'Height', unit: 'cm' },
+    bmi: { label: 'Body Mass Index', unit: 'kg/m²' },
+  };
+
+  const chips = Object.entries(obj).map(([key, value]) => {
+    const normKey = key.toLowerCase().replace(/[\s-]/g, '_');
+    const info = labelMap[normKey] || {
+      label: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      unit: '',
+    };
+    const displayVal = typeof value === 'object' ? JSON.stringify(value) : String(value);
+
+    return `
+      <div style="background: var(--color-bg-subtle); border: 1px solid var(--color-bg-muted); border-radius: var(--radius-md); padding: 0.6rem 0.85rem; min-width: 130px; flex: 1;">
+        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-subtle); font-weight: 600;">
+          ${escapeHtml(info.label)}
+        </div>
+        <div style="font-size: 1.05rem; font-weight: 700; color: var(--color-text-main); margin-top: 0.2rem;">
+          ${escapeHtml(displayVal)} <span style="font-size: 0.75rem; font-weight: 400; color: var(--color-text-muted);">${escapeHtml(info.unit)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div style="display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-2);">
+      ${chips}
+    </div>
+  `;
+}
+

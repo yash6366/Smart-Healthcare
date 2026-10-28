@@ -13,8 +13,9 @@
   <link rel="stylesheet" href="css/components.css">
 </head>
 <body style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: var(--color-bg-app); padding: 1.5rem;">
-  <div class="card" style="max-width: 480px; width: 100%; text-align: center; padding: 2.5rem 2rem;">
-    <div style="width: 64px; height: 64px; border-radius: 50%; background-color: var(--color-danger-bg); color: var(--color-danger); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+  <a href="#mainContent" class="skip-link">Skip to main content</a>
+  <main id="mainContent" class="card" style="max-width: 480px; width: 100%; text-align: center; padding: 2.5rem 2rem;">
+    <div style="width: 64px; height: 64px; border-radius: 50%; background-color: var(--color-danger-bg); color: var(--color-danger); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;" aria-hidden="true">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
     </div>
     <div style="font-size: 0.85rem; font-weight: 700; color: var(--color-danger); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">403 Forbidden</div>
@@ -26,7 +27,7 @@
       <a href="index.html" class="btn btn-outline">VakCare Home</a>
       <button id="returnDashboardBtn" class="btn btn-primary">Return to My Portal</button>
     </div>
-  </div>
+  </main>
 
   <script type="module">
     import { Auth } from './js/auth.js';

@@ -23,7 +23,7 @@
         <!-- Filter Toolbar -->
         <div class="action-toolbar">
           <div class="filter-group">
-            <select id="recordTypeFilter" class="form-select" style="width: auto; min-width: 220px;">
+            <select id="recordTypeFilter" class="form-select" style="width: auto; min-width: 220px;" aria-label="Filter medical records by type">
               <option value="">All Record Types</option>
               <option value="CONSULTATION_NOTE">Consultation Note</option>
               <option value="DIAGNOSIS">Clinical Diagnosis</option>
@@ -43,16 +43,16 @@
         <!-- Medical Records Table -->
         <div class="card">
           <div class="card-body" style="padding: 0;">
-            <div class="table-container" style="border: none; box-shadow: none;">
+            <div class="table-container" role="region" aria-label="Medical records list" tabindex="0" style="border: none; box-shadow: none;">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Record ID</th>
-                    <th>Title & Clinical Finding</th>
-                    <th>Record Type</th>
-                    <th>Authoring Doctor</th>
-                    <th>Date Recorded</th>
-                    <th>Actions</th>
+                    <th scope="col">Record ID</th>
+                    <th scope="col">Title & Clinical Finding</th>
+                    <th scope="col">Record Type</th>
+                    <th scope="col">Authoring Doctor</th>
+                    <th scope="col">Date Recorded</th>
+                    <th scope="col">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="medicalRecordsTableBody">
@@ -72,7 +72,7 @@
 
   <!-- Medical Record Detail & AI Summarize Modal -->
   <div class="modal-backdrop" id="recordModal">
-    <div class="modal-dialog" style="max-width: 680px;">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalRecordTitle" style="max-width: 680px;">
       <div class="modal-header">
         <div>
           <h3 class="card-title" id="modalRecordTitle">Medical Record</h3>
@@ -101,8 +101,8 @@
         </div>
 
         <div id="clinicalDataSection" class="hidden">
-          <h4 style="font-size: 0.95rem; margin-bottom: var(--space-2);">Structured Clinical Metrics</h4>
-          <div id="modalClinicalData" style="font-size: 0.85rem; font-family: var(--font-mono); background: #f8fafc; border: 1px solid var(--color-bg-muted); padding: var(--space-3); border-radius: var(--radius-md); max-height: 140px; overflow-y: auto;"></div>
+          <h4 style="font-size: 0.95rem; margin-bottom: var(--space-2);">Structured Clinical Vitals & Metrics</h4>
+          <div id="modalClinicalData"></div>
         </div>
 
         <!-- AI Summary Card Box -->
@@ -118,7 +118,7 @@
             </button>
           </div>
 
-          <div id="aiSummaryContent" style="font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.5;">
+          <div id="aiSummaryContent" role="status" aria-live="polite" style="font-size: 0.85rem; color: var(--color-text-muted); line-height: 1.5;">
             Click "Generate Summary" to have our healthcare AI translate complex medical terminology into clear, patient-friendly explanations.
           </div>
 
@@ -136,7 +136,7 @@
     import { Auth } from '../../js/auth.js';
     import { api } from '../../js/api-client.js';
     import { initAppLayout } from '../../js/components.js';
-    import { formatDate, escapeHtml, renderEmptyState } from '../../js/ui.js';
+    import { formatDate, escapeHtml, renderEmptyState, renderClinicalVitals } from '../../js/ui.js';
 
     const user = await Auth.guardRoute(['PATIENT', 'ADMIN']);
     if (!user) throw new Error('Unauthorized');
@@ -225,8 +225,8 @@
       document.getElementById('modalDescription').textContent = r.description;
 
       const clinicalDataBox = document.getElementById('clinicalDataSection');
-      if (r.clinical_data && Object.keys(r.clinical_data).length > 0) {
-        document.getElementById('modalClinicalData').textContent = JSON.stringify(r.clinical_data, null, 2);
+      if (r.clinical_data && (typeof r.clinical_data === 'object' ? Object.keys(r.clinical_data).length > 0 : true)) {
+        document.getElementById('modalClinicalData').innerHTML = renderClinicalVitals(r.clinical_data);
         clinicalDataBox.classList.remove('hidden');
       } else {
         clinicalDataBox.classList.add('hidden');

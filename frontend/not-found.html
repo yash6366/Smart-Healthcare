@@ -13,8 +13,9 @@
   <link rel="stylesheet" href="css/components.css">
 </head>
 <body style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: var(--color-bg-app); padding: 1.5rem;">
-  <div class="card" style="max-width: 480px; width: 100%; text-align: center; padding: 2.5rem 2rem;">
-    <div style="width: 64px; height: 64px; border-radius: 50%; background-color: var(--color-primary-subtle); color: var(--color-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+  <a href="#mainContent" class="skip-link">Skip to main content</a>
+  <main id="mainContent" class="card" style="max-width: 480px; width: 100%; text-align: center; padding: 2.5rem 2rem;">
+    <div style="width: 64px; height: 64px; border-radius: 50%; background-color: var(--color-primary-subtle); color: var(--color-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;" aria-hidden="true">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
     </div>
     <div style="font-size: 0.85rem; font-weight: 700; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">404 Not Found</div>
@@ -26,7 +27,7 @@
       <a href="index.html" class="btn btn-outline">VakCare Home</a>
       <button id="returnDashboardBtn" class="btn btn-primary">Go to Dashboard</button>
     </div>
-  </div>
+  </main>
 
   <script type="module">
     import { Auth } from './js/auth.js';
