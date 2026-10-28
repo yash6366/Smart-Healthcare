@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VakCare — Intelligent Healthcare Management Platform</title>
   <meta name="description"
-    content="Connecting patients, verified doctors, and healthcare administrators with integrated appointments, medical records, and AI assistance.">
+    content="Connecting patients and verified doctors with integrated appointments, medical records, and AI assistance.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -73,12 +73,12 @@
             Healthcare connected with <span class="highlight">precision</span> and empathy.
           </h1>
           <p class="hero-description">
-            VakCare unites patients, certified physicians, and hospital administrators in an intuitive ecosystem with
+            VakCare unites patients and certified physicians in an intuitive ecosystem with
             instant consultation booking, digital health records, and AI-assisted guidance.
           </p>
 
           <div class="hero-actions">
-            <a href="register.html" class="btn btn-primary btn-lg" id="heroBookConsultation">Create Patient Account</a>
+            <a href="register.html" class="btn btn-primary btn-lg" id="heroBookConsultation">Create Account</a>
             <a href="#ai-assistant" class="btn btn-outline btn-lg" id="heroExploreAi">Explore AI Assistant</a>
           </div>
 
@@ -315,12 +315,12 @@
         <p style="line-height: 1.8; margin-bottom: var(--space-8);">
           VakCare was developed to bridge the coordination gap between patients and medical professionals. Designed
           around the principle of least privilege, strict HIPAA-inspired audit tracking, and accessible design, VakCare
-          guarantees that patient data is confidential, doctor schedules are respected, and hospital administrators
-          maintain full operational visibility.
+          guarantees that patient data is confidential, clinical schedules are respected, and healthcare operations
+          maintain full reliability.
         </p>
         <div class="flex justify-center gap-4 flex-wrap">
           <a href="register.html" class="btn btn-primary btn-lg">Join VakCare Today</a>
-          <a href="login.html" class="btn btn-outline btn-lg">Sign In to Your Portal</a>
+          <a href="login.html" class="btn btn-outline btn-lg">Sign In to Your Account</a>
         </div>
       </div>
     </section>
@@ -347,11 +347,10 @@
         </div>
 
         <div>
-          <div class="footer-col-title">Portals</div>
+          <div class="footer-col-title">Account</div>
           <div class="footer-link-list">
-            <a href="login.html">Patient Portal</a>
-            <a href="login.html">Doctor Portal</a>
-            <a href="login.html">Administrator Portal</a>
+            <a href="login.html">Sign In</a>
+            <a href="register.html">Create Account</a>
           </div>
         </div>
 
@@ -436,7 +435,7 @@
         if (user.role === 'ADMIN') dashboardHref = getAppPath('/pages/admin/dashboard.html');
 
         authGroup.innerHTML = `
-          <a href="${dashboardHref}" class="btn btn-primary btn-sm">Go to Dashboard (${user.role})</a>
+          <a href="${dashboardHref}" class="btn btn-primary btn-sm">Go to Dashboard</a>
         `;
       }
     }

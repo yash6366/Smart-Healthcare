@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In — VakCare Healthcare Platform</title>
-  <meta name="description" content="Sign in to your VakCare account for patients, doctors, and administrators.">
+  <meta name="description" content="Sign in to your VakCare account.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -47,7 +47,7 @@
           Back to VakCare Home
         </a>
         <h1 class="auth-header-title">Sign In</h1>
-        <p class="auth-header-desc">Enter your credentials to access your patient, doctor, or administrator portal.</p>
+        <p class="auth-header-desc">Enter your credentials to access your account.</p>
       </div>
 
       <!-- Feedback Banner -->
@@ -101,14 +101,7 @@
       </form>
 
       <div class="auth-switch-text">
-        Don't have an account? <a href="register.html">Register as a Patient</a>
-      </div>
-
-      <div class="role-policy-notice">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-info" style="flex-shrink:0; margin-top:1px;" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
-        <div>
-          <strong>Healthcare Staff & Administrators:</strong> Use your designated credentials above. Doctor accounts are provisioned and verified by hospital administrators.
-        </div>
+        Don't have an account? <a href="register.html">Create an account</a>
       </div>
     </div>
   </main>
@@ -171,7 +164,7 @@
         const response = await Auth.login(identifier, password);
         const user = response.user;
 
-        showAlert(`Welcome back, ${user.first_name || user.username}! Redirecting to portal...`, 'success');
+        showAlert(`Welcome back, ${user.first_name || user.username}! Redirecting to dashboard...`, 'success');
 
         // Check if redirect query param exists
         const redirectTarget = urlParams.get('redirect');
