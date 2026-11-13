@@ -1,14 +1,15 @@
-from rest_framework import generics, status
+from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, NotFound
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 
 from .models import Prescription
 from .serializers import PrescriptionCreateSerializer, PrescriptionSerializer
 from apps.notifications.services import send_notification
 from apps.notifications.models import Notification
 from apps.audit.services import log_audit_event
+from apps.common.serializers import APIErrorResponseSerializer
 
 
 class PrescriptionListCreateView(generics.ListCreateAPIView):
@@ -55,7 +56,18 @@ class PrescriptionListCreateView(generics.ListCreateAPIView):
         tags=["Prescriptions"],
         summary="Issue New Prescription (Doctor Only)",
         request=PrescriptionCreateSerializer,
-        responses={201: PrescriptionSerializer},
+        responses={
+            201: inline_serializer(
+                name="PrescriptionCreateEnvelopeResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "message": serializers.CharField(),
+                    "prescription": PrescriptionSerializer(),
+                },
+            ),
+            400: APIErrorResponseSerializer,
+            403: APIErrorResponseSerializer,
+        },
     )
     def post(self, request, *args, **kwargs):
         if request.user.role != "DOCTOR" or not hasattr(request.user, "doctor_profile"):
@@ -72,7 +84,7 @@ class PrescriptionListCreateView(generics.ListCreateAPIView):
         # Notify Patient
         send_notification(
             recipient=prescription.patient.user,
-            notification_type=Notification.NotificationType.PRESCRIPTION_ISSUED,
+            notification_type=str(Notification.NotificationType.PRESCRIPTION_ISSUED.value),
             title="New Prescription Issued",
             message=f"Dr. {doctor.display_name} has issued a new prescription for your consultation.",
             data={"prescription_id": prescription.id},
@@ -85,7 +97,7 @@ class PrescriptionListCreateView(generics.ListCreateAPIView):
             resource_type="Prescription",
             resource_id=str(prescription.id),
             action="ISSUE_PRESCRIPTION",
-            details={"patient_id": prescription.patient_id, "items_count": prescription.items.count()},
+            details={"patient_id": prescription.patient_id, "items_count": len(serializer.validated_data["items"])},
             is_success=True,
             request=request,
         )

@@ -7,6 +7,7 @@ from apps.common.models import TimeStampedModel
 
 class DoctorProfile(TimeStampedModel):
     """
+    Logical Category: CORE (Table: doctors_doctorprofile)
     Healthcare practitioner profile managing qualifications, specialization,
     consultation fee, working hours, and verification status.
     """
@@ -35,7 +36,6 @@ class DoctorProfile(TimeStampedModel):
         max_length=50,
         choices=Specialization.choices,
         default=Specialization.GENERAL_MEDICINE,
-        db_index=True,
     )
     qualifications = models.CharField(max_length=255, help_text="e.g. MBBS, MD, MS")
     years_of_experience = models.PositiveIntegerField(

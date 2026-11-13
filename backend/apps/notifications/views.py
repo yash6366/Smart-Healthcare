@@ -1,13 +1,20 @@
 from django.utils import timezone
-from rest_framework import generics, status
+from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
-from rest_framework import serializers
 
+from apps.accounts.permissions import IsAdministrator
+from apps.common.serializers import APIErrorResponseSerializer
 from .models import Notification
 from .serializers import NotificationSerializer
+from .services import generate_appointment_reminders
+
+
+class NotificationMarkReadResponseSerializer(serializers.Serializer):
+    status = serializers.CharField(default="success")
+    notification = NotificationSerializer()
 
 
 class NotificationListView(generics.ListAPIView):
@@ -45,7 +52,7 @@ class NotificationMarkReadView(APIView):
         tags=["Notifications"],
         summary="Mark Notification as Read",
         request=None,
-        responses={200: NotificationSerializer},
+        responses={200: NotificationMarkReadResponseSerializer, 404: APIErrorResponseSerializer},
     )
     def patch(self, request, pk):
         try:
@@ -66,6 +73,12 @@ class NotificationMarkReadView(APIView):
             status=status.HTTP_200_OK,
         )
 
+    @extend_schema(
+        tags=["Notifications"],
+        summary="Mark Notification as Read (POST alias)",
+        request=None,
+        responses={200: NotificationMarkReadResponseSerializer, 404: APIErrorResponseSerializer},
+    )
     def post(self, request, pk):
         """Allow POST in addition to PATCH for broader client compatibility."""
         return self.patch(request, pk)
@@ -108,12 +121,15 @@ class NotificationTriggerRemindersView(APIView):
     Trigger automated scanning and delivery of upcoming appointment reminders.
     Restricted to Platform Administrators or automated system workers.
     """
-    from apps.accounts.permissions import IsAdministrator
     permission_classes = [IsAdministrator]
 
     @extend_schema(
         tags=["Notifications"],
         summary="Trigger Appointment Reminders (Admin Only)",
+        request=inline_serializer(
+            name="TriggerRemindersRequest",
+            fields={"lead_hours": serializers.IntegerField(required=False, default=48, min_value=1)},
+        ),
         responses={
             200: inline_serializer(
                 name="TriggerRemindersResponse",
@@ -122,12 +138,29 @@ class NotificationTriggerRemindersView(APIView):
                     "reminders_generated": serializers.IntegerField(),
                     "message": serializers.CharField(),
                 },
-            )
+            ),
+            400: APIErrorResponseSerializer,
+            403: APIErrorResponseSerializer,
         },
     )
     def post(self, request):
-        from .services import generate_appointment_reminders
-        lead_hours = int(request.data.get("lead_hours", 48))
+        try:
+            lead_hours = int(request.data.get("lead_hours", 48))
+        except (TypeError, ValueError):
+            lead_hours = 0
+
+        if lead_hours <= 0:
+            return Response(
+                {
+                    "status": "error",
+                    "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "lead_hours must be a positive integer.",
+                    },
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         count = generate_appointment_reminders(lead_hours=lead_hours)
         return Response(
             {

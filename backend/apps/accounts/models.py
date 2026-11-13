@@ -43,6 +43,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractUser):
     """
+    Logical Category: CORE (Table: accounts_user)
     Custom User model for VakCare platform with explicit role-based access.
     The ADMIN application role does NOT automatically grant Django superuser privileges.
     """
@@ -52,7 +53,7 @@ class User(AbstractUser):
         DOCTOR = "DOCTOR", "Doctor"
         ADMIN = "ADMIN", "Administrator"
 
-    email = models.EmailField(unique=True, db_index=True)
+    email = models.EmailField(unique=True)
     role = models.CharField(
         max_length=20,
         choices=Role.choices,
@@ -76,9 +77,6 @@ class User(AbstractUser):
         verbose_name = "User"
         verbose_name_plural = "Users"
         ordering = ["-created_at"]
-        indexes = [
-            models.Index(fields=["email", "role"]),
-        ]
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"

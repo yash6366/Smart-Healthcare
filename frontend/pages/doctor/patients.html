@@ -132,7 +132,7 @@
     import { Auth } from '../../js/auth.js';
     import { api } from '../../js/api-client.js';
     import { initAppLayout } from '../../js/components.js';
-    import { formatDate, escapeHtml, renderEmptyState } from '../../js/ui.js';
+    import { debounce, formatDate, escapeHtml, renderEmptyState } from '../../js/ui.js';
 
     const user = await Auth.guardRoute(['DOCTOR', 'ADMIN']);
     if (!user) throw new Error('Unauthorized');
@@ -143,6 +143,7 @@
     });
 
     const searchInput = document.getElementById('patientSearchInput');
+    const patientsMap = new Map();
     searchInput.addEventListener('input', debounce(loadPatients, 350));
     document.getElementById('resetSearchBtn').addEventListener('click', () => {
       searchInput.value = '';
@@ -162,6 +163,7 @@
       try {
         const res = await api.get('/patients/', params);
         const patients = res.results || [];
+        patientsMap.clear();
 
         if (patients.length === 0) {
           tbody.innerHTML = `
@@ -176,6 +178,8 @@
           `;
           return;
         }
+
+        patients.forEach(p => patientsMap.set(String(p.id), p));
 
         tbody.innerHTML = patients.map(p => {
           const u = p.user || {};
@@ -204,7 +208,7 @@
               </td>
               <td>${escapeHtml(p.city ? `${p.city}, ${p.state}` : '—')}</td>
               <td>
-                <button class="btn btn-outline btn-sm view-patient-btn" data-patient='${JSON.stringify(p)}'>
+                <button class="btn btn-outline btn-sm view-patient-btn" data-id="${p.id}">
                   View Details
                 </button>
               </td>
@@ -214,8 +218,8 @@
 
         tbody.querySelectorAll('.view-patient-btn').forEach(btn => {
           btn.addEventListener('click', () => {
-            const p = JSON.parse(btn.dataset.patient);
-            openPatientModal(p);
+            const p = patientsMap.get(btn.dataset.id);
+            if (p) openPatientModal(p);
           });
         });
       } catch (err) {
@@ -311,17 +315,11 @@
     document.getElementById('closePatientModal').onclick = closeModal;
     document.getElementById('closePatientModalFooterBtn').onclick = closeModal;
 
-    function debounce(func, wait) {
-      let timeout;
-      return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-      };
-    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeModal();
+      }
+    });
   </script>
 </body>
 </html>

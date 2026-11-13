@@ -147,6 +147,7 @@
     });
 
     const filterSelect = document.getElementById('recordTypeFilter');
+    const recordsMap = new Map();
     filterSelect.addEventListener('change', loadRecords);
 
     let activeRecord = null;
@@ -163,6 +164,7 @@
       try {
         const res = await api.get('/medical-records/', params);
         const records = res.results || [];
+        recordsMap.clear();
 
         if (records.length === 0) {
           tbody.innerHTML = `
@@ -177,6 +179,8 @@
           `;
           return;
         }
+
+        records.forEach(r => recordsMap.set(String(r.id), r));
 
         tbody.innerHTML = records.map(r => `
           <tr>
@@ -193,7 +197,7 @@
             <td>Dr. ${escapeHtml(r.doctor_name || 'Specialist')}</td>
             <td>${formatDate(r.created_at)}</td>
             <td>
-              <button class="btn btn-outline btn-sm view-record-btn" data-record='${JSON.stringify(r)}'>
+              <button class="btn btn-outline btn-sm view-record-btn" data-id="${r.id}">
                 View Details
               </button>
             </td>
@@ -202,8 +206,8 @@
 
         tbody.querySelectorAll('.view-record-btn').forEach(btn => {
           btn.addEventListener('click', () => {
-            const recordData = JSON.parse(btn.dataset.record);
-            openRecordModal(recordData);
+            const recordData = recordsMap.get(btn.dataset.id);
+            if (recordData) openRecordModal(recordData);
           });
         });
       } catch (err) {

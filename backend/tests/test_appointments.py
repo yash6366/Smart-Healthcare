@@ -1,8 +1,6 @@
 from datetime import date, timedelta
 import pytest
 from rest_framework import status
-from django.utils import timezone
-from apps.appointments.models import Appointment
 from apps.notifications.models import Notification
 
 
@@ -110,10 +108,9 @@ class TestAppointments:
         assert "Doctor already has an active appointment" in str(resp2.json())
 
     def test_conflicting_patient_appointment_rejection(
-        self, auth_client, patient_user, doctor_user, admin_user, future_date
+        self, auth_client, patient_user, doctor_user, future_date
     ):
         # Create second doctor
-        user2 = apps_user = admin_user  # temporary user
         from apps.accounts.models import User
         from apps.doctors.models import DoctorProfile
 

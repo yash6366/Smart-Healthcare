@@ -7,21 +7,12 @@ from pathlib import Path
 
 def main():
     """Run administrative tasks."""
-    # Ensure backend directory is in sys.path
+    # Ensure backend directory is in sys.path and initialize driver fallbacks via config package
     base_dir = Path(__file__).resolve().parent
     if str(base_dir) not in sys.path:
         sys.path.insert(0, str(base_dir))
 
-    # Serverless/local fallback: install PyMySQL as MySQLdb driver if native MySQLdb is unavailable
-    try:
-        import MySQLdb  # noqa: F401
-    except ImportError:
-        try:
-            import pymysql
-            pymysql.version_info = (2, 2, 0, "final", 0)
-            pymysql.install_as_MySQLdb()
-        except ImportError:
-            pass
+    import config  # noqa: F401
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
     try:

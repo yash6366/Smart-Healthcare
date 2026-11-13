@@ -86,3 +86,50 @@ class AppointmentCancelSerializer(serializers.Serializer):
 
 class AppointmentRejectSerializer(serializers.Serializer):
     reason = serializers.CharField(required=False, allow_blank=True, default="")
+
+
+class AppointmentActionResponseSerializer(serializers.Serializer):
+    status = serializers.CharField(default="success")
+    message = serializers.CharField()
+    appointment = AppointmentSerializer()
+
+
+class ScheduleDoctorSummarySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    working_hours = serializers.CharField()
+
+
+class ScheduleKPIsSerializer(serializers.Serializer):
+    total_slots = serializers.IntegerField()
+    PENDING = serializers.IntegerField()
+    CONFIRMED = serializers.IntegerField()
+    COMPLETED = serializers.IntegerField()
+    CANCELLED = serializers.IntegerField()
+    REJECTED = serializers.IntegerField()
+
+
+class SchedulePatientSummarySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    gender = serializers.CharField()
+    phone = serializers.CharField(allow_null=True, allow_blank=True)
+
+
+class DailyScheduleSlotSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    start_time = serializers.CharField()
+    end_time = serializers.CharField()
+    duration_minutes = serializers.IntegerField()
+    status = serializers.CharField()
+    patient = SchedulePatientSummarySerializer()
+    reason = serializers.CharField()
+    cancellation_reason = serializers.CharField(allow_blank=True)
+
+
+class DoctorDailyScheduleResponseSerializer(serializers.Serializer):
+    status = serializers.CharField(default="success")
+    date = serializers.DateField()
+    doctor = ScheduleDoctorSummarySerializer()
+    kpis = ScheduleKPIsSerializer()
+    schedule = DailyScheduleSlotSerializer(many=True)

@@ -1,10 +1,10 @@
 # VakCare — AI-Powered Healthcare Management Platform
 
-[![Backend Tests](https://img.shields.io/badge/tests-68%20passed-success?style=flat-square&logo=pytest)](docs/TESTING_AND_QA.md)
+[![Backend Tests](https://img.shields.io/badge/tests-80%20passed-success?style=flat-square&logo=pytest)](docs/TESTING_AND_QA.md)
 [![Python Version](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue?style=flat-square&logo=python)](requirements.txt)
 [![Django](https://img.shields.io/badge/django-5.2-092E20?style=flat-square&logo=django)](requirements.txt)
 [![DRF](https://img.shields.io/badge/drf-3.15-red?style=flat-square)](requirements.txt)
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
 VakCare is an enterprise-grade, full-stack healthcare management web platform connecting **Patients**, **Verified Medical Practitioners**, and **Healthcare Administrators**. It features atomic, race-condition-safe appointment scheduling, electronic health records (EHR), multi-item prescriptions, an intelligent triage AI assistant, and HIPAA-aligned immutable security audit logging.
 
@@ -18,12 +18,12 @@ Explore the comprehensive in-depth documentation guides:
 | :--- | :--- |
 | **[Architecture & Design Specification](docs/ARCHITECTURE.md)** | System topology, domain partitioning, concurrency model, state machines, defense-in-depth security, and error handling. |
 | **[RESTful API Reference](docs/API_DOCUMENTATION.md)** | Complete reference for all 10 domain modules, request/response schemas, query parameters, error codes, and curl examples. |
-| **[Database Schema & Data Model](docs/DATABASE_SCHEMA.md)** | Relational ER diagrams, table definitions, column types, constraints, foreign keys, cascade rules, and indexing strategies. |
-| **[Frontend Guide & UI Components](docs/FRONTEND_GUIDE.md)** | Modern Vanilla ES6 architecture, CSS token design system, automatic 401 JWT refresh queuing, route guards, and role portals. |
+| **[Database Schema & Data Model](docs/DATABASE_SCHEMA.md)** | 5-tier logical grouping, ER diagram, 22-table & 84-index inventory, column types, 26 FK cascade rules, and collation policy. |
+| **[Frontend Guide & UI Components](docs/FRONTEND_GUIDE.md)** | Vanilla ES6 module architecture, CSS token design system, automatic 401 JWT refresh queuing, route guards, and role portals. |
 | **[AI Assistant Architecture & Safety](docs/AI_ASSISTANT_ARCHITECTURE.md)** | Pluggable provider engine (OpenAI, Gemini, Mock), safety boundaries, clinical disclaimers, triage logic, and record summarizer. |
-| **[Deployment & Operations Manual](docs/DEPLOYMENT_AND_OPERATIONS.md)** | Vercel serverless deployment, Docker/VM production setup, environment variables dictionary, background reminder crons, and health probes. |
+| **[Deployment & Operations Manual](docs/DEPLOYMENT_AND_OPERATIONS.md)** | Vercel/Docker/VM deployment, env variable precedence, Local vs. Aiven DB safety guards, backup/restore, crons, and health probes. |
 | **[Security & Compliance Guidelines](docs/SECURITY_AND_COMPLIANCE.md)** | PHI protection, doctor-patient consultation relationship constraints, sanitized audit logging, security headers, and rate limiting. |
-| **[Automated Testing & QA Manual](docs/TESTING_AND_QA.md)** | Pytest test architecture, 68 test case breakdown, test fixtures, coverage reporting, and quality assurance release checklists. |
+| **[Automated Testing & QA Manual](docs/TESTING_AND_QA.md)** | Pytest configuration, 80-test case breakdown, test fixtures, coverage reporting, and quality assurance release checklists. |
 
 ---
 
@@ -134,21 +134,26 @@ graph TD
 Smart Healthcare/
 ├── .gitignore                   # Root gitignore excluding virtual environments, credentials, and caches
 ├── .venv/                       # Python virtual environment (Python 3.12 / 3.13)
+├── pytest.ini                   # Root pytest configuration (discovers backend/tests with pythonpath=backend)
 ├── vercel.json                  # Serverless full-stack deployment configuration for Vercel
-├── requirements.txt             # Production Python dependencies
-├── docs/                        # Complete in-depth platform documentation suite
+├── requirements.txt             # Production Python dependencies (single source of truth)
+├── .env.example                 # Root environment variables template
+├── docs/                        # Platform documentation suite (8 focused guides)
 │   ├── ARCHITECTURE.md          # System architecture, domain design, concurrency control
 │   ├── API_DOCUMENTATION.md     # Complete REST API reference with schemas and examples
-│   ├── DATABASE_SCHEMA.md       # Relational ER diagrams, table schemas, column types
+│   ├── DATABASE_SCHEMA.md       # 5-tier logical model, ER diagram, 22 tables, 84 indexes, 26 FKs
 │   ├── FRONTEND_GUIDE.md        # Vanilla ES6 client, CSS tokens, JWT refresh, route guards
 │   ├── AI_ASSISTANT_ARCHITECTURE.md # Pluggable AI engine, safety guardrails, triage rules
-│   ├── DEPLOYMENT_AND_OPERATIONS.md # Vercel, Docker, Gunicorn, env vars, cron reminders
+│   ├── DEPLOYMENT_AND_OPERATIONS.md # Vercel, Docker, Gunicorn, DB env guards, backup/restore, crons
 │   ├── SECURITY_AND_COMPLIANCE.md   # PHI privacy, HIPAA-aligned audit trail, security headers
-│   └── TESTING_AND_QA.md        # Pytest test matrix (68 tests), fixtures, release checklists
+│   └── TESTING_AND_QA.md        # Pytest test matrix (80 tests), fixtures, release checklists
 ├── backend/                     # Django REST Framework Backend Application
 │   ├── manage.py                # Django CLI management utility
-│   ├── pytest.ini               # Pytest test runner configuration
-│   ├── .env.example             # Environment variables template
+│   ├── pytest.ini               # Backend-local pytest runner configuration
+│   ├── requirements.txt         # Delegates to root ../requirements.txt
+│   ├── requirements-dev.txt     # Local test & coverage dependencies (pytest, pytest-django, pytest-cov)
+│   ├── .env.example             # Backend environment variables template
+│   ├── scripts/                 # Database bootstrap SQL scripts (setup_local_mysql.sql)
 │   ├── config/                  # Settings (base, development, production), URLs, WSGI, ASGI
 │   ├── apps/                    # 10 decoupled domain applications
 │   │   ├── accounts/            # Custom User model, RBAC permissions, JWT authentication
@@ -160,8 +165,8 @@ Smart Healthcare/
 │   │   ├── notifications/       # In-app notifications & automated appointment reminders
 │   │   ├── ai_assistant/        # Pluggable AI service (OpenAI, Gemini, Mock)
 │   │   ├── audit/               # Security audit ledger & administrator analytics
-│   │   └── common/              # Timestamped models, unified error envelope, health probes
-│   └── tests/                   # 68 automated unit & integration test cases
+│   │   └── common/              # Timestamped models, unified error envelope, health probes, check_db
+│   └── tests/                   # 80 automated unit & integration test cases
 └── frontend/                    # Vanilla ES6 & CSS Client Application
     ├── index.html               # Platform landing page with hero, services, and specialists
     ├── login.html               # Unified authentication portal for all roles
@@ -180,22 +185,38 @@ Smart Healthcare/
 
 ## Quick Start
 
-### 1. Backend Setup
+### 1. Database & Backend Setup
 
-```bash
+```powershell
 # 1. Activate Python virtual environment
 .\.venv\Scripts\Activate.ps1    # On Windows (PowerShell)
 source .venv/bin/activate       # On Linux / macOS
 
-# 2. Copy environment template if not configured
-cp backend/.env.example backend/.env
+# 2. Local MySQL Setup (One-time)
+# Open MySQL Workbench and execute: backend/scripts/setup_local_mysql.sql
+# This creates the 'vakcare_dev' user and grants permissions on 'vakcare_db'.
+# Configure DB_PASSWORD in .env or .env.local to match your local account password.
 
-# 3. Apply database migrations
+# 3. Verify Database Environment & Connectivity (Non-destructive diagnostic check)
+python backend/manage.py check_db
+
+# 4. Apply database migrations (if setting up fresh database)
 python backend/manage.py migrate
 
-# 4. Start the Django development server
+# 5. Optional: Seed development synthetic data (Admin, Doctors, Patients)
+python backend/manage.py seed_data
+
+# 6. Start the Django development server (uses local MySQL by default)
 python backend/manage.py runserver
 ```
+
+> **Switching to Aiven Cloud MySQL**:
+> The existing Aiven Cloud MySQL configuration is preserved in `.env.aiven` and `.env`.
+> To connect to Aiven Cloud MySQL explicitly, set:
+> ```powershell
+> $env:DB_ENVIRONMENT="aiven"; python backend/manage.py check_db
+> $env:DB_ENVIRONMENT="aiven"; python backend/manage.py runserver
+> ```
 
 Interactive OpenAPI documentation is live at:
 - **Swagger UI**: `http://127.0.0.1:8000/api/docs/`
@@ -207,22 +228,22 @@ Interactive OpenAPI documentation is live at:
 
 Open `frontend/index.html` in your browser or serve it using any HTTP server:
 
-```bash
-# Example using Python's built-in HTTP server on port 3000:
-python -m http.server 3000 --directory frontend
+```powershell
+# Serve using Python's built-in HTTP server on port 8080:
+python -m http.server 8080 --directory frontend
 ```
-Navigate to `http://localhost:3000` in your web browser.
+Navigate to `http://127.0.0.1:8080` in your web browser.
 
 ### 3. Automated Test Suite Execution
 
-Run the complete 68-test automated suite:
+Run the complete 80-test automated suite:
 
 ```bash
-pytest backend/tests
+pytest
 ```
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License.

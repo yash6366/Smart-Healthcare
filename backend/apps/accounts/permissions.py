@@ -70,6 +70,28 @@ class IsDoctorOrAdmin(BasePermission):
         )
 
 
+class IsVerifiedDoctorOrAdmin(BasePermission):
+    """
+    Allows access only to credential-verified doctors or platform administrators.
+    Prevents unverified doctor accounts from enumerating or reading patient PHI.
+    """
+    message = "Access restricted to verified healthcare professionals and administrators."
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not (user and user.is_authenticated and user.is_active):
+            return False
+
+        if user.role == User.Role.ADMIN or user.is_staff or user.is_superuser:
+            return True
+
+        if user.role == User.Role.DOCTOR:
+            doctor_profile = getattr(user, "doctor_profile", None)
+            return bool(doctor_profile and doctor_profile.is_verified)
+
+        return False
+
+
 class IsOwnerOrAdmin(BasePermission):
     """
     Object-level permission allowing access to object owner or administrator.

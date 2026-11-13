@@ -1,12 +1,15 @@
-from rest_framework import generics, status
+from django.db.models import Exists, OuterRef, Q
+from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied, NotFound
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 
 from .models import MedicalRecord
 from .serializers import MedicalRecordCreateSerializer, MedicalRecordSerializer
+from apps.appointments.models import Appointment
 from apps.audit.services import log_audit_event
+from apps.common.serializers import APIErrorResponseSerializer
 
 
 class MedicalRecordListCreateView(generics.ListCreateAPIView):
@@ -26,13 +29,17 @@ class MedicalRecordListCreateView(generics.ListCreateAPIView):
         if user.role == "ADMIN" or user.is_superuser:
             qs = MedicalRecord.objects.all()
         elif user.role == "DOCTOR":
+            doctor = getattr(user, "doctor_profile", None)
+            if not doctor or not doctor.is_verified:
+                raise PermissionDenied("Only verified doctors can access medical records.")
             # Doctor can see records they authored or for patients who booked with them
-            qs = MedicalRecord.objects.filter(
-                doctor__user=user
-            ) | MedicalRecord.objects.filter(
-                patient__appointments__doctor__user=user
+            treating_patient = Appointment.objects.filter(
+                patient_id=OuterRef("patient_id"),
+                doctor__user=user,
             )
-            qs = qs.distinct()
+            qs = MedicalRecord.objects.filter(
+                Q(doctor__user=user) | Exists(treating_patient)
+            )
         else:
             qs = MedicalRecord.objects.filter(patient__user=user)
 
@@ -44,7 +51,11 @@ class MedicalRecordListCreateView(generics.ListCreateAPIView):
 
         patient_id = self.request.query_params.get("patient_id")
         if patient_id and (user.role in ("DOCTOR", "ADMIN") or user.is_superuser):
-            qs = qs.filter(patient_id=patient_id)
+            try:
+                parsed_patient_id = int(patient_id)
+            except (TypeError, ValueError):
+                raise ValidationError({"patient_id": "patient_id must be a valid integer."})
+            qs = qs.filter(patient_id=parsed_patient_id)
 
         return qs
 
@@ -55,6 +66,7 @@ class MedicalRecordListCreateView(generics.ListCreateAPIView):
             OpenApiParameter(name="record_type", description="Filter by record type", required=False, type=str),
             OpenApiParameter(name="patient_id", description="Filter by patient ID (Doctors/Admins)", required=False, type=int),
         ],
+        responses={200: MedicalRecordSerializer(many=True), 400: APIErrorResponseSerializer, 403: APIErrorResponseSerializer},
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -63,7 +75,18 @@ class MedicalRecordListCreateView(generics.ListCreateAPIView):
         tags=["Medical Records"],
         summary="Create Medical Record (Doctor or Admin Only)",
         request=MedicalRecordCreateSerializer,
-        responses={201: MedicalRecordSerializer},
+        responses={
+            201: inline_serializer(
+                name="MedicalRecordCreateEnvelopeResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "message": serializers.CharField(),
+                    "record": MedicalRecordSerializer(),
+                },
+            ),
+            400: APIErrorResponseSerializer,
+            403: APIErrorResponseSerializer,
+        },
     )
     def post(self, request, *args, **kwargs):
         if not (request.user.role in ("DOCTOR", "ADMIN") or request.user.is_superuser):

@@ -22,12 +22,15 @@ class SecurityHeadersMiddleware:
         response = self.get_response(request)
 
         # 1. Content-Security-Policy
-        # Configurable connect-src to support diverse development and production hosts
-        default_connect = (
-            "'self' http://127.0.0.1:8000 http://localhost:8000 "
-            "http://127.0.0.1:8080 http://localhost:8080 "
-            "ws://127.0.0.1:8000 ws://localhost:8000"
-        )
+        # Restrict connect-src to 'self' in production unless explicitly overridden via CSP_CONNECT_SRC
+        if settings.DEBUG:
+            default_connect = (
+                "'self' http://127.0.0.1:8000 http://localhost:8000 "
+                "http://127.0.0.1:8080 http://localhost:8080 "
+                "ws://127.0.0.1:8000 ws://localhost:8000"
+            )
+        else:
+            default_connect = "'self'"
         connect_src = getattr(settings, "CSP_CONNECT_SRC", default_connect)
 
         csp_directives = [

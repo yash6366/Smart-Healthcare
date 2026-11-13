@@ -4,6 +4,7 @@ from apps.common.models import TimeStampedModel
 
 class MedicalRecord(TimeStampedModel):
     """
+    Logical Category: HEALTHCARE (Table: medical_records_medicalrecord)
     Patient electronic health records (EHR) preserving clinical consultations,
     diagnostic summaries, and lab reports.
     """

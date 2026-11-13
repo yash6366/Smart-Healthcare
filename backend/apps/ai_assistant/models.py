@@ -8,6 +8,7 @@ from apps.common.models import TimeStampedModel
 
 class Conversation(TimeStampedModel):
     """
+    Logical Category: COMMUNICATION (Table: ai_assistant_conversation)
     Persistent AI inquiry session owned exclusively by the authenticated user.
     Strictly isolated: neither doctors nor administrators gain access to patient conversations.
     """
@@ -33,6 +34,7 @@ class Conversation(TimeStampedModel):
 
 class Message(models.Model):
     """
+    Logical Category: COMMUNICATION (Table: ai_assistant_message)
     Individual message turn within an AI conversation session.
     """
     class Role(models.TextChoices):

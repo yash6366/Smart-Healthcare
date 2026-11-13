@@ -1,8 +1,10 @@
-from rest_framework import generics, status
+from django.db.models import Q
+from rest_framework import generics, serializers, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
 
 from .models import DoctorProfile
 from .serializers import (
@@ -13,6 +15,7 @@ from .serializers import (
 )
 from apps.accounts.permissions import IsAdministrator, IsDoctor
 from apps.audit.services import log_audit_event
+from apps.common.serializers import APIErrorResponseSerializer
 
 
 class DoctorListView(generics.ListCreateAPIView):
@@ -47,14 +50,27 @@ class DoctorListView(generics.ListCreateAPIView):
 
         search = self.request.query_params.get("search")
         if search:
-            qs = qs.filter(display_name__icontains=search) | qs.filter(qualifications__icontains=search)
+            qs = qs.filter(Q(display_name__icontains=search) | Q(qualifications__icontains=search))
 
         max_fee = self.request.query_params.get("max_fee")
         if max_fee:
             try:
-                qs = qs.filter(consultation_fee__lte=float(max_fee))
+                fee_val = float(max_fee)
+                if fee_val < 0:
+                    raise ValueError("negative")
             except ValueError:
-                pass
+                raise ValidationError({"max_fee": "max_fee must be a valid non-negative number."})
+            qs = qs.filter(consultation_fee__lte=fee_val)
+
+        is_verified_param = self.request.query_params.get("is_verified")
+        if is_verified_param is not None and is_verified_param != "" and user.is_authenticated and (user.role == "ADMIN" or user.is_superuser):
+            lowered = is_verified_param.strip().lower()
+            if lowered in ("true", "1", "yes"):
+                qs = qs.filter(is_verified=True)
+            elif lowered in ("false", "0", "no"):
+                qs = qs.filter(is_verified=False)
+            else:
+                raise ValidationError({"is_verified": "is_verified must be 'true' or 'false'."})
 
         ordering = self.request.query_params.get("ordering")
         if ordering in ["consultation_fee", "-consultation_fee", "years_of_experience", "-years_of_experience"]:
@@ -69,8 +85,10 @@ class DoctorListView(generics.ListCreateAPIView):
             OpenApiParameter(name="specialization", description="Filter by doctor specialization", required=False, type=str),
             OpenApiParameter(name="search", description="Search by doctor name or qualification", required=False, type=str),
             OpenApiParameter(name="max_fee", description="Filter by maximum consultation fee", required=False, type=float),
+            OpenApiParameter(name="is_verified", description="Filter by verification status (Admin only)", required=False, type=bool),
             OpenApiParameter(name="ordering", description="Order by consultation_fee or years_of_experience", required=False, type=str),
         ],
+        responses={200: DoctorPublicSerializer(many=True), 400: APIErrorResponseSerializer},
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -79,7 +97,18 @@ class DoctorListView(generics.ListCreateAPIView):
         tags=["Doctors"],
         summary="Provision New Doctor Account (Admin Only)",
         request=DoctorAdminCreateSerializer,
-        responses={201: DoctorDetailSerializer},
+        responses={
+            201: inline_serializer(
+                name="DoctorActionEnvelopeResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "message": serializers.CharField(),
+                    "doctor": DoctorDetailSerializer(),
+                },
+            ),
+            400: APIErrorResponseSerializer,
+            403: APIErrorResponseSerializer,
+        },
     )
     def post(self, request, *args, **kwargs):
         serializer = DoctorAdminCreateSerializer(data=request.data)
@@ -174,7 +203,19 @@ class DoctorVerifyView(APIView):
         tags=["Doctors"],
         summary="Verify or Revoke Doctor Status (Admin Only)",
         request=DoctorVerifySerializer,
-        responses={200: DoctorDetailSerializer},
+        responses={
+            200: inline_serializer(
+                name="DoctorVerifyEnvelopeResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "message": serializers.CharField(),
+                    "doctor": DoctorDetailSerializer(),
+                },
+            ),
+            400: APIErrorResponseSerializer,
+            403: APIErrorResponseSerializer,
+            404: APIErrorResponseSerializer,
+        },
     )
     def post(self, request, pk):
         try:

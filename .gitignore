@@ -31,9 +31,12 @@ env/
 .env.*
 !.env.example
 
-# Databases
+# Databases & Backups
 *.sqlite3
 *.db
+backups/
+*.sql
+!backend/scripts/setup_local_mysql.sql
 
 # Media & Uploads
 media/

@@ -72,6 +72,7 @@ Authorization: Bearer <access_token>
   "username": "johndoe",
   "email": "johndoe@example.com",
   "password": "SecurePassword123!",
+  "password_confirm": "SecurePassword123!",
   "first_name": "John",
   "last_name": "Doe",
   "phone_number": "+919876543210"
@@ -90,7 +91,8 @@ Authorization: Bearer <access_token>
     "last_name": "Doe",
     "role": "PATIENT",
     "phone_number": "+919876543210",
-    "is_verified": false
+    "is_verified": true,
+    "created_at": "2026-11-01T10:00:00+05:30"
   }
 }
 ```
@@ -117,7 +119,8 @@ Authorization: Bearer <access_token>
     "last_name": "Doe",
     "role": "PATIENT",
     "phone_number": "+919876543210",
-    "is_verified": false
+    "is_verified": true,
+    "created_at": "2026-11-01T10:00:00+05:30"
   },
   "tokens": {
     "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -174,7 +177,8 @@ Authorization: Bearer <access_token>
   "last_name": "Doe",
   "role": "PATIENT",
   "phone_number": "+919876543210",
-  "is_verified": false
+  "is_verified": true,
+  "created_at": "2026-11-01T10:00:00+05:30"
 }
 ```
 
@@ -469,24 +473,32 @@ Authorization: Bearer <access_token>
   "date": "2026-11-05",
   "doctor": {
     "id": 2,
-    "display_name": "Ramesh Sharma",
-    "specialization": "Cardiology"
+    "name": "Ramesh Sharma",
+    "working_hours": "09:00:00 - 17:00:00"
   },
-  "metrics": {
-    "total": 6,
-    "pending": 1,
-    "confirmed": 4,
-    "completed": 1,
-    "cancelled": 0
+  "kpis": {
+    "total_slots": 6,
+    "PENDING": 1,
+    "CONFIRMED": 4,
+    "COMPLETED": 1,
+    "CANCELLED": 0,
+    "REJECTED": 0
   },
   "schedule": [
     {
       "id": 10,
       "start_time": "10:30:00",
       "end_time": "11:00:00",
-      "patient_name": "John Doe",
+      "duration_minutes": 30,
       "status": "CONFIRMED",
-      "reason": "Persistent chest heaviness"
+      "patient": {
+        "id": 1,
+        "name": "John Doe",
+        "gender": "Male",
+        "phone": "+919876543210"
+      },
+      "reason": "Persistent chest heaviness",
+      "cancellation_reason": ""
     }
   ]
 }
@@ -641,34 +653,70 @@ Authorization: Bearer <access_token>
 ```json
 {
   "status": "success",
-  "analytics_window_days": 30,
-  "metrics": {
-    "users": {
-      "total_patients": 42,
-      "total_doctors": 12,
-      "verified_doctors": 10,
-      "pending_verification": 2,
-      "available_doctors": 9
-    },
-    "appointments": {
-      "all_time_total": 85,
-      "completed": 62,
-      "confirmed": 14,
-      "pending": 4,
-      "cancelled": 3,
-      "rejected": 2,
-      "completion_rate_pct": 72.94,
-      "cancellation_rate_pct": 3.53
-    },
-    "clinical": {
-      "total_medical_records": 110,
-      "total_prescriptions": 78
-    },
-    "ai_engine": {
-      "active_provider": "openai",
-      "model": "gpt-4o-mini",
-      "queries_executed": 145
+  "period": {
+    "days": 30,
+    "start_date": "2026-10-06",
+    "end_date": "2026-11-05"
+  },
+  "practitioners_and_patients": {
+    "total_patients": 42,
+    "total_doctors": 12,
+    "verified_doctors": 10,
+    "pending_verification_doctors": 2,
+    "currently_available_doctors": 9
+  },
+  "appointments_all_time": {
+    "total": 85,
+    "pending": 4,
+    "confirmed": 14,
+    "completed": 62,
+    "cancelled": 3,
+    "rejected": 2
+  },
+  "appointments_window": {
+    "total": 30,
+    "pending": 2,
+    "confirmed": 5,
+    "completed": 21,
+    "cancelled": 1,
+    "rejected": 1
+  },
+  "rates": {
+    "completion_rate_percent": 91.3,
+    "cancellation_rate_percent": 3.6,
+    "completion_rate_denominator": "Resolved terminal consultations (completed + cancelled + rejected)",
+    "cancellation_rate_denominator": "Scheduled active or terminal consultations (completed + cancelled + rejected + confirmed)"
+  },
+  "doctor_workloads": [
+    {
+      "doctor_id": 2,
+      "name": "Ramesh Sharma",
+      "specialization": "CARDIOLOGY",
+      "total_consultations": 18,
+      "completed": 14,
+      "cancelled": 1
     }
+  ],
+  "clinical_volume": {
+    "total_prescriptions": 78,
+    "total_medical_records": 110,
+    "total_audit_events": 240
+  },
+  "recent_audit_events": [
+    {
+      "id": 240,
+      "event_type": "AUTH_LOGIN",
+      "action": "USER_LOGIN_SUCCESS",
+      "ip_address": "127.0.0.1",
+      "is_success": true,
+      "created_at": "2026-11-05T10:15:00Z",
+      "actor__username": "admin"
+    }
+  ],
+  "system_health": {
+    "backend_service": "operational",
+    "database": "connected",
+    "ai_engine_configured": "MOCK"
   }
 }
 ```

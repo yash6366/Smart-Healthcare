@@ -11,6 +11,18 @@ from apps.notifications.models import Notification
 from apps.audit.services import log_audit_event
 
 
+def _is_assigned_doctor(actor, appointment: Appointment) -> bool:
+    return hasattr(actor, "doctor_profile") and appointment.doctor_id == actor.doctor_profile.id
+
+
+def _is_patient_owner(actor, appointment: Appointment) -> bool:
+    return hasattr(actor, "patient_profile") and appointment.patient_id == actor.patient_profile.id
+
+
+def _is_admin(actor) -> bool:
+    return actor.role == "ADMIN" or actor.is_superuser
+
+
 def create_appointment(
     patient: PatientProfile,
     doctor: DoctorProfile,
@@ -123,16 +135,16 @@ def create_appointment(
 
 def confirm_appointment(appointment: Appointment, actor, request=None) -> Appointment:
     """Doctor or Administrator confirms a pending appointment."""
-    if appointment.status != Appointment.Status.PENDING:
-        raise ValidationError(f"Cannot confirm an appointment with status '{appointment.status}'. Must be PENDING.")
-
-    # Authorization
-    is_assigned_doctor = hasattr(actor, "doctor_profile") and appointment.doctor_id == actor.doctor_profile.id
-    is_admin = actor.role == "ADMIN" or actor.is_superuser
-    if not (is_assigned_doctor or is_admin):
+    if not (_is_assigned_doctor(actor, appointment) or _is_admin(actor)):
         raise PermissionDenied("Only the assigned doctor or an administrator can confirm this appointment.")
 
     with transaction.atomic():
+        appointment = Appointment.objects.select_for_update().select_related(
+            "doctor", "doctor__user", "patient", "patient__user"
+        ).get(pk=appointment.pk)
+        if appointment.status != Appointment.Status.PENDING:
+            raise ValidationError(f"Cannot confirm an appointment with status '{appointment.status}'. Must be PENDING.")
+
         appointment.status = Appointment.Status.CONFIRMED
         appointment.save(update_fields=["status", "updated_at"])
 
@@ -160,15 +172,16 @@ def confirm_appointment(appointment: Appointment, actor, request=None) -> Appoin
 
 def reject_appointment(appointment: Appointment, actor, reason: str = "", request=None) -> Appointment:
     """Doctor or Administrator rejects a pending appointment."""
-    if appointment.status != Appointment.Status.PENDING:
-        raise ValidationError(f"Cannot reject an appointment with status '{appointment.status}'. Must be PENDING.")
-
-    is_assigned_doctor = hasattr(actor, "doctor_profile") and appointment.doctor_id == actor.doctor_profile.id
-    is_admin = actor.role == "ADMIN" or actor.is_superuser
-    if not (is_assigned_doctor or is_admin):
+    if not (_is_assigned_doctor(actor, appointment) or _is_admin(actor)):
         raise PermissionDenied("Only the assigned doctor or an administrator can reject this appointment.")
 
     with transaction.atomic():
+        appointment = Appointment.objects.select_for_update().select_related(
+            "doctor", "doctor__user", "patient", "patient__user"
+        ).get(pk=appointment.pk)
+        if appointment.status != Appointment.Status.PENDING:
+            raise ValidationError(f"Cannot reject an appointment with status '{appointment.status}'. Must be PENDING.")
+
         appointment.status = Appointment.Status.REJECTED
         appointment.cancellation_reason = reason
         appointment.cancelled_by = actor
@@ -199,17 +212,17 @@ def reject_appointment(appointment: Appointment, actor, reason: str = "", reques
 
 def cancel_appointment(appointment: Appointment, actor, reason: str = "", request=None) -> Appointment:
     """Patient, Assigned Doctor, or Administrator cancels a PENDING or CONFIRMED appointment."""
-    if appointment.status not in (Appointment.Status.PENDING, Appointment.Status.CONFIRMED):
-        raise ValidationError(f"Cannot cancel an appointment with terminal status '{appointment.status}'.")
-
-    is_patient_owner = hasattr(actor, "patient_profile") and appointment.patient_id == actor.patient_profile.id
-    is_assigned_doctor = hasattr(actor, "doctor_profile") and appointment.doctor_id == actor.doctor_profile.id
-    is_admin = actor.role == "ADMIN" or actor.is_superuser
-
-    if not (is_patient_owner or is_assigned_doctor or is_admin):
+    is_patient_owner = _is_patient_owner(actor, appointment)
+    if not (is_patient_owner or _is_assigned_doctor(actor, appointment) or _is_admin(actor)):
         raise PermissionDenied("You do not have permission to cancel this appointment.")
 
     with transaction.atomic():
+        appointment = Appointment.objects.select_for_update().select_related(
+            "doctor", "doctor__user", "patient", "patient__user"
+        ).get(pk=appointment.pk)
+        if appointment.status not in (Appointment.Status.PENDING, Appointment.Status.CONFIRMED):
+            raise ValidationError(f"Cannot cancel an appointment with terminal status '{appointment.status}'.")
+
         appointment.status = Appointment.Status.CANCELLED
         appointment.cancellation_reason = reason
         appointment.cancelled_by = actor
@@ -242,15 +255,16 @@ def cancel_appointment(appointment: Appointment, actor, reason: str = "", reques
 
 def complete_appointment(appointment: Appointment, actor, request=None) -> Appointment:
     """Assigned Doctor or Administrator completes a confirmed consultation."""
-    if appointment.status != Appointment.Status.CONFIRMED:
-        raise ValidationError(f"Cannot complete appointment with status '{appointment.status}'. Must be CONFIRMED.")
-
-    is_assigned_doctor = hasattr(actor, "doctor_profile") and appointment.doctor_id == actor.doctor_profile.id
-    is_admin = actor.role == "ADMIN" or actor.is_superuser
-    if not (is_assigned_doctor or is_admin):
+    if not (_is_assigned_doctor(actor, appointment) or _is_admin(actor)):
         raise PermissionDenied("Only the assigned doctor or an administrator can mark an appointment as completed.")
 
     with transaction.atomic():
+        appointment = Appointment.objects.select_for_update().select_related(
+            "doctor", "doctor__user", "patient", "patient__user"
+        ).get(pk=appointment.pk)
+        if appointment.status != Appointment.Status.CONFIRMED:
+            raise ValidationError(f"Cannot complete appointment with status '{appointment.status}'. Must be CONFIRMED.")
+
         appointment.status = Appointment.Status.COMPLETED
         appointment.save(update_fields=["status", "updated_at"])
 

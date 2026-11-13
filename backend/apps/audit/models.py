@@ -4,6 +4,7 @@ from django.db import models
 
 class AuditLog(models.Model):
     """
+    Logical Category: SECURITY (Table: audit_auditlog)
     Security and compliance audit trail recording critical platform actions.
     Records cannot be updated or deleted by regular users.
     """
@@ -25,7 +26,7 @@ class AuditLog(models.Model):
         ADMIN_ACTION = "ADMIN_ACTION", "Administrative Action"
         PERMISSION_DENIED = "PERMISSION_DENIED", "Permission Denied"
 
-    event_type = models.CharField(max_length=50, choices=EventType.choices, db_index=True)
+    event_type = models.CharField(max_length=50, choices=EventType.choices)
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

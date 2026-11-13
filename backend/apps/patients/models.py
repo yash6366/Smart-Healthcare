@@ -5,6 +5,7 @@ from apps.common.models import TimeStampedModel
 
 class PatientProfile(TimeStampedModel):
     """
+    Logical Category: CORE (Table: patients_patientprofile)
     Patient profile storing demographic, emergency contact, and location details.
     Keeps sensitive medical data separated into dedicated medical records.
     """
@@ -53,9 +54,7 @@ class PatientProfile(TimeStampedModel):
     class Meta:
         verbose_name = "Patient Profile"
         verbose_name_plural = "Patient Profiles"
-        indexes = [
-            models.Index(fields=["user"]),
-        ]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"Patient: {self.user.get_full_name() or self.user.username}"

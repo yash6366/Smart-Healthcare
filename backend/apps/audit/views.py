@@ -7,8 +7,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from .models import AuditLog
-from .serializers import AuditLogSerializer
+from .serializers import AdminAnalyticsResponseSerializer, AuditLogSerializer
 from apps.accounts.permissions import IsAdministrator
+from apps.common.serializers import APIErrorResponseSerializer
 from apps.patients.models import PatientProfile
 from apps.doctors.models import DoctorProfile
 from apps.appointments.models import Appointment
@@ -67,8 +68,12 @@ class AdminAnalyticsView(APIView):
         tags=["Audit"],
         summary="Get Comprehensive Platform Analytics (Admin Only)",
         parameters=[
-            OpenApiParameter(name="days", description="Analysis window in days (default: 30)", required=False, type=int),
+            OpenApiParameter(name="days", description="Analysis window in days (default: 30, range: 1-365)", required=False, type=int),
         ],
+        responses={
+            200: AdminAnalyticsResponseSerializer,
+            403: APIErrorResponseSerializer,
+        },
     )
     def get(self, request):
         now = timezone.now()

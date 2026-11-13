@@ -1,9 +1,8 @@
 import json
 import logging
-import urllib.request
 from typing import Any
 from django.conf import settings
-from .base import BaseAIProvider, DISCLAIMER_TEXT
+from .base import BaseAIProvider, DISCLAIMER_TEXT, infer_triage_metadata, post_json, redact_secret
 from .mock_provider import MockAIProvider
 
 logger = logging.getLogger("apps.ai_assistant")
@@ -20,43 +19,65 @@ class GeminiAIProvider(BaseAIProvider):
         self.model = getattr(settings, "AI_PROVIDER_MODEL", "gemini-2.5-flash")
         self._fallback = MockAIProvider()
 
+    @staticmethod
+    def _format_context(context: dict[str, Any] | None) -> str:
+        if not context:
+            return ""
+        history = context.get("history")
+        if isinstance(history, list) and history:
+            lines = []
+            for turn in history[-4:]:
+                if isinstance(turn, dict):
+                    role = str(turn.get("role", "USER")).upper()
+                    content = str(turn.get("content", "")).strip()[:200]
+                    if content:
+                        lines.append(f"- {role}: {content}")
+            if lines:
+                return "Recent conversation context:\n" + "\n".join(lines) + "\n\n"
+        return f"Additional context: {json.dumps(context)[:400]}\n\n"
+
     def generate_guidance(self, query: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         if not self.api_key:
             logger.info("No AI_PROVIDER_API_KEY configured; utilizing MockAIProvider fallback.")
             return self._fallback.generate_guidance(query, context)
 
+        context_block = self._format_context(context)
         prompt = (
-            f"You are a medical healthcare AI triage assistant on the VakCare platform.\n"
+            "You are a medical healthcare AI triage assistant on the VakCare platform.\n"
+            f"{context_block}"
             f"User inquiry: {query}\n"
-            f"Guidelines:\n"
-            f"1. Never provide an absolute diagnosis or prescribe prescription medicines.\n"
-            f"2. Explain potential causes and recommended self-care or general wellness steps.\n"
-            f"3. Recommend an appropriate medical doctor specialization.\n"
-            f"4. If symptoms sound severe (chest pain, stroke signs, difficulty breathing), immediately advise emergency care.\n"
+            "Guidelines:\n"
+            "1. Never provide an absolute diagnosis or prescribe prescription medicines.\n"
+            "2. Explain potential causes and recommended self-care or general wellness steps.\n"
+            "3. Recommend an appropriate medical doctor specialization.\n"
+            "4. If symptoms sound severe (chest pain, stroke signs, difficulty breathing), immediately advise emergency care.\n"
         )
 
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
-            req_data = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode("utf-8")
+            payload = {"contents": [{"parts": [{"text": prompt}]}]}
             headers = {
                 "Content-Type": "application/json",
                 "x-goog-api-key": self.api_key,
             }
-            req = urllib.request.Request(url, data=req_data, headers=headers)
+            result = post_json(url, payload, headers, timeout=15)
+            text = result["candidates"][0]["content"]["parts"][0]["text"]
+            if not isinstance(text, str) or not text.strip():
+                raise ValueError("Gemini API returned an empty guidance response.")
 
-            with urllib.request.urlopen(req, timeout=10) as response:
-                result = json.loads(response.read().decode("utf-8"))
-                text = result["candidates"][0]["content"]["parts"][0]["text"]
-                return {
-                    "provider": f"Gemini ({self.model})",
-                    "guidance": text,
-                    "disclaimer": DISCLAIMER_TEXT,
-                }
+            suggested_specialization, is_emergency_alert = infer_triage_metadata(query, text)
+            return {
+                "provider": f"Gemini ({self.model})",
+                "guidance": text.strip(),
+                "suggested_specialization": suggested_specialization,
+                "disclaimer": DISCLAIMER_TEXT,
+                "is_emergency_alert": is_emergency_alert,
+            }
         except Exception as exc:
-            err_msg = str(exc)
-            if self.api_key and self.api_key in err_msg:
-                err_msg = err_msg.replace(self.api_key, "[REDACTED]")
-            logger.warning("Gemini AI API request encountered an error (%s); falling back to MockAIProvider.", err_msg)
+            logger.warning(
+                "Gemini AI API request encountered an error (%s); falling back to MockAIProvider.",
+                redact_secret(exc, self.api_key),
+            )
             return self._fallback.generate_guidance(query, context)
 
     def summarize_medical_record(
@@ -69,33 +90,32 @@ class GeminiAIProvider(BaseAIProvider):
             return self._fallback.summarize_medical_record(title, description, clinical_data)
 
         prompt = (
-            f"Summarize this patient medical record into patient-friendly, easy-to-understand terms:\n"
+            "Summarize this patient medical record into patient-friendly, easy-to-understand terms:\n"
             f"Title: {title}\n"
             f"Notes: {description}\n"
             f"Vitals: {json.dumps(clinical_data or {})}\n"
-            f"Do not disclose confidential metadata."
+            "Do not disclose confidential metadata."
         )
 
         try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
-            req_data = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode("utf-8")
+            payload = {"contents": [{"parts": [{"text": prompt}]}]}
             headers = {
                 "Content-Type": "application/json",
                 "x-goog-api-key": self.api_key,
             }
-            req = urllib.request.Request(url, data=req_data, headers=headers)
-
-            with urllib.request.urlopen(req, timeout=10) as response:
-                result = json.loads(response.read().decode("utf-8"))
-                text = result["candidates"][0]["content"]["parts"][0]["text"]
-                return {
-                    "provider": f"Gemini ({self.model})",
-                    "summary": text,
-                    "disclaimer": DISCLAIMER_TEXT,
-                }
+            result = post_json(url, payload, headers, timeout=15)
+            text = result["candidates"][0]["content"]["parts"][0]["text"]
+            if not isinstance(text, str) or not text.strip():
+                raise ValueError("Gemini API returned an empty record summary.")
+            return {
+                "provider": f"Gemini ({self.model})",
+                "summary": text.strip(),
+                "disclaimer": DISCLAIMER_TEXT,
+            }
         except Exception as exc:
-            err_msg = str(exc)
-            if self.api_key and self.api_key in err_msg:
-                err_msg = err_msg.replace(self.api_key, "[REDACTED]")
-            logger.warning("Gemini record summarization failed (%s); using Mock fallback.", err_msg)
+            logger.warning(
+                "Gemini record summarization failed (%s); using Mock fallback.",
+                redact_secret(exc, self.api_key),
+            )
             return self._fallback.summarize_medical_record(title, description, clinical_data)

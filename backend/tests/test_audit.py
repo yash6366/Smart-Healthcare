@@ -1,7 +1,6 @@
 import pytest
 from rest_framework import status
 from apps.audit.services import log_audit_event, sanitize_details
-from apps.audit.models import AuditLog
 
 
 @pytest.mark.django_db

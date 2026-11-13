@@ -222,10 +222,9 @@
     async function loadDoctorQueue() {
       const tbody = document.getElementById('unverifiedDoctorsTbody');
       try {
-        // Admins can see all doctors
-        const res = await api.get('/doctors/', { page_size: 10 });
-        const allDocs = res.results || [];
-        const unverified = allDocs.filter(d => !d.is_verified);
+        // Admins can filter explicitly to unverified doctors regardless of total roster size
+        const res = await api.get('/doctors/', { is_verified: 'false', page_size: 20 });
+        const unverified = res.results || [];
 
         if (unverified.length === 0) {
           tbody.innerHTML = `

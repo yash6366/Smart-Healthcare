@@ -1,18 +1,34 @@
 from datetime import datetime
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 from .models import PatientProfile
-from .serializers import PatientProfileSerializer
-from apps.accounts.permissions import IsDoctorOrAdmin, IsPatient, IsOwnerOrAdmin
+from .serializers import (
+    PatientClinicalHistoryResponseSerializer,
+    PatientHealthTimelineResponseSerializer,
+    PatientProfileSerializer,
+)
+from apps.accounts.permissions import IsVerifiedDoctorOrAdmin, IsPatient, IsOwnerOrAdmin
 from apps.appointments.models import Appointment
+from apps.common.serializers import APIErrorResponseSerializer
 from apps.medical_records.models import MedicalRecord
 from apps.prescriptions.models import Prescription
+
+
+def _serialize_medication_item(item) -> dict:
+    return {
+        "name": item.medication_name,
+        "dosage": item.dosage,
+        "frequency": item.frequency,
+        "duration": item.duration,
+        "instructions": item.instructions,
+    }
 
 
 class PatientMeView(generics.RetrieveUpdateAPIView):
@@ -38,9 +54,9 @@ class PatientMeView(generics.RetrieveUpdateAPIView):
 
 class PatientListView(generics.ListAPIView):
     """
-    List patient profiles. Accessible by authorized healthcare staff and platform administrators.
+    List patient profiles. Accessible by verified healthcare staff and platform administrators.
     """
-    permission_classes = [IsDoctorOrAdmin]
+    permission_classes = [IsVerifiedDoctorOrAdmin]
     serializer_class = PatientProfileSerializer
     queryset = PatientProfile.objects.all().select_related("user")
 
@@ -49,11 +65,9 @@ class PatientListView(generics.ListAPIView):
         search = self.request.query_params.get("search")
         if search:
             qs = qs.filter(
-                user__first_name__icontains=search
-            ) | qs.filter(
-                user__last_name__icontains=search
-            ) | qs.filter(
-                user__email__icontains=search
+                Q(user__first_name__icontains=search)
+                | Q(user__last_name__icontains=search)
+                | Q(user__email__icontains=search)
             )
         return qs
 
@@ -92,13 +106,36 @@ class PatientHealthTimelineView(APIView):
             OpenApiParameter(name="event_type", description="Filter by event type (APPOINTMENT, MEDICAL_RECORD, PRESCRIPTION, or ALL)", required=False, type=str),
             OpenApiParameter(name="limit", description="Max events to return (default: 50)", required=False, type=int),
         ],
+        responses={
+            200: PatientHealthTimelineResponseSerializer,
+            400: APIErrorResponseSerializer,
+        },
     )
     def get(self, request):
         patient, _ = PatientProfile.objects.get_or_create(user=request.user)
-        start_date = request.query_params.get("start_date")
-        end_date = request.query_params.get("end_date")
+        start_date_raw = request.query_params.get("start_date")
+        end_date_raw = request.query_params.get("end_date")
+        start_date = None
+        end_date = None
+        if start_date_raw:
+            try:
+                start_date = datetime.strptime(start_date_raw, "%Y-%m-%d").date()
+            except ValueError:
+                raise ValidationError({"start_date": "Date format must be YYYY-MM-DD."})
+        if end_date_raw:
+            try:
+                end_date = datetime.strptime(end_date_raw, "%Y-%m-%d").date()
+            except ValueError:
+                raise ValidationError({"end_date": "Date format must be YYYY-MM-DD."})
+
         event_filter = request.query_params.get("event_type", "ALL").upper()
-        limit = min(int(request.query_params.get("limit", 50)), 200)
+        if event_filter not in ("ALL", "APPOINTMENT", "MEDICAL_RECORD", "PRESCRIPTION"):
+            raise ValidationError({"event_type": "Must be ALL, APPOINTMENT, MEDICAL_RECORD, or PRESCRIPTION."})
+
+        try:
+            limit = max(1, min(int(request.query_params.get("limit", 50)), 200))
+        except (TypeError, ValueError):
+            limit = 50
 
         events = []
 
@@ -163,28 +200,20 @@ class PatientHealthTimelineView(APIView):
                 rx_qs = rx_qs.filter(issued_at__date__lte=end_date)
 
             for rx in rx_qs:
+                medications = [_serialize_medication_item(item) for item in rx.items.all()]
                 events.append({
                     "event_type": "PRESCRIPTION",
                     "event_id": rx.id,
                     "timestamp": rx.issued_at.isoformat(),
                     "title": f"Prescription: {rx.diagnosis}",
-                    "subtitle": f"{rx.items.count()} medication(s) prescribed",
+                    "subtitle": f"{len(medications)} medication(s) prescribed",
                     "status": rx.status,
                     "doctor_name": rx.doctor.display_name,
                     "details": {
                         "diagnosis": rx.diagnosis,
                         "status": rx.status,
                         "notes": rx.notes,
-                        "medications": [
-                            {
-                                "name": item.medication_name,
-                                "dosage": item.dosage,
-                                "frequency": item.frequency,
-                                "duration": item.duration,
-                                "instructions": item.instructions,
-                            }
-                            for item in rx.items.all()
-                        ],
+                        "medications": medications,
                     },
                 })
 
@@ -205,13 +234,18 @@ class PatientHealthTimelineView(APIView):
 class PatientClinicalHistoryView(APIView):
     """
     Authorized clinical history for a patient.
-    Accessible only to doctors with a consultation relationship with this patient, or platform administrators.
+    Accessible only to verified doctors with a consultation relationship with this patient, or platform administrators.
     """
-    permission_classes = [IsDoctorOrAdmin]
+    permission_classes = [IsVerifiedDoctorOrAdmin]
 
     @extend_schema(
         tags=["Patients"],
         summary="Get Patient Clinical History (Authorized Doctors/Admins)",
+        responses={
+            200: PatientClinicalHistoryResponseSerializer,
+            403: APIErrorResponseSerializer,
+            404: APIErrorResponseSerializer,
+        },
     )
     def get(self, request, pk):
         try:
@@ -273,16 +307,7 @@ class PatientClinicalHistoryView(APIView):
                         "notes": p.notes,
                         "issued_at": p.issued_at.isoformat(),
                         "doctor_name": p.doctor.display_name,
-                        "items": [
-                            {
-                                "name": item.medication_name,
-                                "dosage": item.dosage,
-                                "frequency": item.frequency,
-                                "duration": item.duration,
-                                "instructions": item.instructions,
-                            }
-                            for item in p.items.all()
-                        ],
+                        "items": [_serialize_medication_item(item) for item in p.items.all()],
                     }
                     for p in prescriptions
                 ],

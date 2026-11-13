@@ -1,9 +1,8 @@
 import json
 import logging
-import urllib.request
 from typing import Any
 from django.conf import settings
-from .base import BaseAIProvider, DISCLAIMER_TEXT
+from .base import BaseAIProvider, DISCLAIMER_TEXT, infer_triage_metadata, post_json, redact_secret
 from .mock_provider import MockAIProvider
 
 logger = logging.getLogger("apps.ai_assistant")
@@ -19,7 +18,10 @@ class OpenAIProvider(BaseAIProvider):
 
     def __init__(self):
         self.api_key = getattr(settings, "AI_PROVIDER_API_KEY", "") or getattr(settings, "OPENAI_API_KEY", "")
-        self.model = getattr(settings, "AI_PROVIDER_MODEL", "gpt-4o-mini")
+        configured_model = getattr(settings, "AI_PROVIDER_MODEL", "") or "gpt-4o-mini"
+        if configured_model.lower().startswith("gemini"):
+            configured_model = "gpt-4o-mini"
+        self.model = configured_model
         self._fallback = MockAIProvider()
 
     def generate_guidance(self, query: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -57,27 +59,25 @@ class OpenAIProvider(BaseAIProvider):
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.api_key}",
             }
-            req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
+            result = post_json(url, payload, headers, timeout=12)
+            text = result["choices"][0]["message"]["content"]
+            if not isinstance(text, str) or not text.strip():
+                raise ValueError("OpenAI API returned an empty guidance response.")
 
-            with urllib.request.urlopen(req, timeout=12) as response:
-                result = json.loads(response.read().decode("utf-8"))
-                text = result["choices"][0]["message"]["content"]
+            suggested_specialization, is_emergency = infer_triage_metadata(query, text)
 
-                # Check if emergency triage is required
-                lower_text = text.lower()
-                is_emergency = any(kw in lower_text for kw in ["emergency", "911", "call ambulance", "hospital immediately"])
-
-                return {
-                    "provider": f"OpenAI ({self.model})",
-                    "guidance": text,
-                    "disclaimer": DISCLAIMER_TEXT,
-                    "is_emergency_alert": is_emergency,
-                }
+            return {
+                "provider": f"OpenAI ({self.model})",
+                "guidance": text.strip(),
+                "suggested_specialization": suggested_specialization,
+                "disclaimer": DISCLAIMER_TEXT,
+                "is_emergency_alert": is_emergency,
+            }
         except Exception as exc:
-            err_msg = str(exc)
-            if self.api_key and self.api_key in err_msg:
-                err_msg = err_msg.replace(self.api_key, "[REDACTED]")
-            logger.warning("OpenAI API request failed (%s); falling back to MockAIProvider.", err_msg)
+            logger.warning(
+                "OpenAI API request failed (%s); falling back to MockAIProvider.",
+                redact_secret(exc, self.api_key),
+            )
             return self._fallback.generate_guidance(query, context)
 
     def summarize_medical_record(
@@ -117,19 +117,18 @@ class OpenAIProvider(BaseAIProvider):
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.api_key}",
             }
-            req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers)
-
-            with urllib.request.urlopen(req, timeout=12) as response:
-                result = json.loads(response.read().decode("utf-8"))
-                summary = result["choices"][0]["message"]["content"]
-                return {
-                    "provider": f"OpenAI ({self.model})",
-                    "summary": summary,
-                    "disclaimer": DISCLAIMER_TEXT,
-                }
+            result = post_json(url, payload, headers, timeout=12)
+            summary = result["choices"][0]["message"]["content"]
+            if not isinstance(summary, str) or not summary.strip():
+                raise ValueError("OpenAI API returned an empty summary.")
+            return {
+                "provider": f"OpenAI ({self.model})",
+                "summary": summary.strip(),
+                "disclaimer": DISCLAIMER_TEXT,
+            }
         except Exception as exc:
-            err_msg = str(exc)
-            if self.api_key and self.api_key in err_msg:
-                err_msg = err_msg.replace(self.api_key, "[REDACTED]")
-            logger.warning("OpenAI record summarization failed (%s); falling back to MockAIProvider.", err_msg)
+            logger.warning(
+                "OpenAI record summarization failed (%s); falling back to MockAIProvider.",
+                redact_secret(exc, self.api_key),
+            )
             return self._fallback.summarize_medical_record(title, description, clinical_data)

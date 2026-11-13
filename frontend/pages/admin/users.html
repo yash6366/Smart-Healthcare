@@ -70,7 +70,7 @@
     import { Auth } from '../../js/auth.js';
     import { api } from '../../js/api-client.js';
     import { initAppLayout } from '../../js/components.js';
-    import { formatDate, escapeHtml, renderEmptyState } from '../../js/ui.js';
+    import { debounce, formatDate, escapeHtml, renderEmptyState } from '../../js/ui.js';
 
     const currentUser = await Auth.guardRoute(['ADMIN']);
     if (!currentUser) throw new Error('Unauthorized');
@@ -181,18 +181,6 @@
       } catch (err) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-danger text-center">Failed to load user accounts: ${escapeHtml(err.message)}</td></tr>`;
       }
-    }
-
-    function debounce(func, wait) {
-      let timeout;
-      return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-      };
     }
   </script>
 </body>

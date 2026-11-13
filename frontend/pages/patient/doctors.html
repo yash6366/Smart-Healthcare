@@ -139,7 +139,7 @@
     import { CONFIG } from '../../js/config.js';
     import { initAppLayout } from '../../js/components.js';
     import { Validation } from '../../js/validation.js';
-    import { formatCurrency, formatTime, escapeHtml, showToast, renderEmptyState } from '../../js/ui.js';
+    import { debounce, formatCurrency, formatTime, escapeHtml, showToast, renderEmptyState } from '../../js/ui.js';
 
     // Guard route
     const user = await Auth.guardRoute(['PATIENT', 'ADMIN']);
@@ -401,18 +401,6 @@
         }
       }
     });
-
-    function debounce(func, wait) {
-      let timeout;
-      return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-      };
-    }
   </script>
 </body>
 </html>

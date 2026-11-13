@@ -9,6 +9,15 @@ __pycache__/
 htmlcov/
 backend/tests/
 backend/db.sqlite3
+*.sqlite3
+*.db
+.env
+.env.*
+!.env.example
+!backend/.env.example
+backups/
+*.sql
+!backend/scripts/setup_local_mysql.sql
 *.log
 docs/
 .git/

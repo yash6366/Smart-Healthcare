@@ -153,6 +153,7 @@
     });
 
     const statusFilter = document.getElementById('statusFilter');
+    const prescriptionsMap = new Map();
     statusFilter.addEventListener('change', loadPrescriptions);
 
     loadPrescriptions();
@@ -168,6 +169,7 @@
       try {
         const res = await api.get('/prescriptions/', params);
         const prescs = res.results || [];
+        prescriptionsMap.clear();
 
         if (prescs.length === 0) {
           tbody.innerHTML = `
@@ -183,6 +185,8 @@
           return;
         }
 
+        prescs.forEach(p => prescriptionsMap.set(String(p.id), p));
+
         tbody.innerHTML = prescs.map(p => `
           <tr>
             <td><span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text-subtle);">#RX-${p.id}</span></td>
@@ -196,7 +200,7 @@
             </td>
             <td>${renderStatusBadge(p.status)}</td>
             <td>
-              <button class="btn btn-outline btn-sm view-presc-btn" data-presc='${JSON.stringify(p)}'>
+              <button class="btn btn-outline btn-sm view-presc-btn" data-id="${p.id}">
                 View Details
               </button>
             </td>
@@ -205,8 +209,8 @@
 
         tbody.querySelectorAll('.view-presc-btn').forEach(btn => {
           btn.addEventListener('click', () => {
-            const p = JSON.parse(btn.dataset.presc);
-            openPrescriptionModal(p);
+            const p = prescriptionsMap.get(btn.dataset.id);
+            if (p) openPrescriptionModal(p);
           });
         });
       } catch (err) {

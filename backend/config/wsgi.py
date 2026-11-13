@@ -13,18 +13,15 @@ if str(base_dir) not in sys.path:
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
-# Serverless environment fallback: install PyMySQL as MySQLdb driver if native MySQLdb is unavailable
-try:
-    import MySQLdb  # noqa: F401
-except ImportError:
-    try:
-        import pymysql
-        pymysql.version_info = (2, 2, 0, "final", 0)
-        pymysql.install_as_MySQLdb()
-    except ImportError:
-        pass
+# Ensure config/__init__.py registers PyMySQL fallback if native MySQLdb is absent
+import config  # noqa: E402, F401
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
+_default_settings = (
+    "config.settings.production"
+    if (os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+    else "config.settings.development"
+)
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", _default_settings)
 
 application = get_wsgi_application()
 app = application

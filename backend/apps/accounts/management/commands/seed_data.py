@@ -1,6 +1,7 @@
 import datetime
 from decimal import Decimal
-from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
@@ -16,7 +17,28 @@ from apps.notifications.models import Notification
 class Command(BaseCommand):
     help = "Seeds database with administrative superuser, diverse verified/unverified doctors, and patient profiles."
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--allow-cloud-seed",
+            action="store_true",
+            help="Explicitly permit seeding development data into a cloud database (e.g. Aiven Cloud MySQL).",
+        )
+
     def handle(self, *args, **options):
+        # Database Safety Check: block accidental development seed data on cloud database
+        db_conf = settings.DATABASES.get("default", {})
+        db_host = str(db_conf.get("HOST", ""))
+        db_name = str(db_conf.get("NAME", ""))
+        db_env = getattr(settings, "DB_ENVIRONMENT", "local")
+
+        is_cloud = db_env in ("aiven", "cloud") or "aivencloud.com" in db_host.lower()
+        if is_cloud and not options.get("allow_cloud_seed", False):
+            raise CommandError(
+                f"[SAFETY ABORT] Refusing to seed dummy development data into cloud database '{db_name}' at '{db_host}'. "
+                "Development seed scripts must not be executed against Aiven Cloud MySQL without explicit authorization. "
+                "To override intentionally, supply '--allow-cloud-seed'."
+            )
+
         self.stdout.write(self.style.NOTICE("Beginning database seeding process..."))
 
         with transaction.atomic():

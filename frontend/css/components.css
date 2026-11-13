@@ -113,6 +113,13 @@
   outline-offset: 2px;
 }
 
+.btn-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 /* Cards */
 .card {
   background-color: var(--color-bg-surface);
@@ -197,23 +204,6 @@
 
 .data-table tbody tr:hover {
   background-color: #fafbfc;
-}
-
-/* Pagination */
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4) var(--space-6);
-  border-top: 1px solid var(--color-bg-muted);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
 }
 
 /* Alert Boxes */
@@ -517,66 +507,4 @@
 .sidebar-backdrop.active {
   opacity: 1;
   visibility: visible;
-}
-
-/* Dedicated Print Styles for Clinical Records & Prescriptions */
-@media print {
-  body {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-  }
-
-  .app-sidebar,
-  .app-topbar,
-  .action-toolbar,
-  .btn,
-  button,
-  .toast-container,
-  .modal-footer,
-  .modal-close,
-  .sidebar-backdrop,
-  #printPrescriptionBtn {
-    display: none !important;
-  }
-
-  .app-shell,
-  .app-main,
-  .app-content {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    background: transparent !important;
-  }
-
-  .modal-backdrop.active {
-    position: static !important;
-    background: transparent !important;
-    padding: 0 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  .modal-dialog {
-    box-shadow: none !important;
-    border: 1px solid #cbd5e1 !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    transform: none !important;
-  }
-
-  .card {
-    box-shadow: none !important;
-    border: 1px solid #cbd5e1 !important;
-  }
-
-  table {
-    border-collapse: collapse !important;
-    width: 100% !important;
-  }
-
-  th, td {
-    border: 1px solid #cbd5e1 !important;
-    padding: 8px !important;
-  }
 }

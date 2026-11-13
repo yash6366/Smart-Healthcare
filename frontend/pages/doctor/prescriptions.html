@@ -223,6 +223,7 @@
     });
 
     const statusFilter = document.getElementById('statusFilter');
+    const prescriptionsMap = new Map();
     statusFilter.addEventListener('change', loadPrescriptions);
 
     loadPrescriptions();
@@ -238,6 +239,7 @@
       try {
         const res = await api.get('/prescriptions/', params);
         const list = res.results || [];
+        prescriptionsMap.clear();
 
         if (list.length === 0) {
           tbody.innerHTML = `
@@ -257,6 +259,8 @@
           return;
         }
 
+        list.forEach(p => prescriptionsMap.set(String(p.id), p));
+
         tbody.innerHTML = list.map(p => {
           const patientName = p.patient?.user?.first_name ? `${p.patient.user.first_name} ${p.patient.user.last_name}` : p.patient?.user?.username || 'Patient';
           return `
@@ -268,7 +272,7 @@
               <td>${formatDate(p.issued_at || p.created_at)}</td>
               <td>${renderStatusBadge(p.status)}</td>
               <td>
-                <button class="btn btn-outline btn-sm view-presc-detail" data-presc='${JSON.stringify(p)}'>
+                <button class="btn btn-outline btn-sm view-presc-detail" data-id="${p.id}">
                   View Details
                 </button>
               </td>
@@ -278,8 +282,8 @@
 
         tbody.querySelectorAll('.view-presc-detail').forEach(btn => {
           btn.addEventListener('click', () => {
-            const p = JSON.parse(btn.dataset.presc);
-            openViewPrescModal(p);
+            const p = prescriptionsMap.get(btn.dataset.id);
+            if (p) openViewPrescModal(p);
           });
         });
       } catch (err) {

@@ -59,8 +59,9 @@ class ConversationListSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
 
-    def get_last_message(self, obj):
-        last_msg = obj.messages.last()
+    def get_last_message(self, obj) -> dict | None:
+        messages = list(obj.messages.all())
+        last_msg = messages[-1] if messages else None
         if last_msg:
             return {
                 "role": last_msg.role,

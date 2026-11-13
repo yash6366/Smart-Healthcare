@@ -70,6 +70,76 @@ export function showToast(message, type = 'info', duration = 4500) {
 }
 
 /**
+ * Debounce helper to rate-limit rapid UI events (e.g. search inputs)
+ */
+export function debounce(func, wait = 300) {
+  let timeout;
+  return function executedFunction(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+/**
+ * Shared accessible modal behavior: focus trap, Escape handling, backdrop dismiss, focus restoration
+ */
+function _attachModalDialog({ backdrop, onDismiss, initialFocusEl }) {
+  const previousActiveElement = document.activeElement;
+  const dialog = backdrop.querySelector('.modal-dialog');
+  const closeBtn = backdrop.querySelector('.modal-close');
+  const cancelBtn = backdrop.querySelector('.modal-cancel');
+  const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+  setTimeout(() => initialFocusEl?.focus(), 50);
+
+  let closed = false;
+  const teardown = (callback) => {
+    if (closed) return;
+    closed = true;
+    document.removeEventListener('keydown', handleKeyDown);
+    backdrop.classList.remove('active');
+    setTimeout(() => {
+      backdrop.remove();
+      if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+        previousActiveElement.focus();
+      }
+    }, 200);
+    callback();
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      onDismiss();
+      return;
+    }
+    if (e.key === 'Tab' && dialog) {
+      const focusables = Array.from(dialog.querySelectorAll(focusableSelector));
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  };
+
+  document.addEventListener('keydown', handleKeyDown);
+  if (closeBtn) closeBtn.onclick = onDismiss;
+  if (cancelBtn) cancelBtn.onclick = onDismiss;
+  backdrop.onclick = (e) => {
+    if (e.target === backdrop) onDismiss();
+  };
+
+  return { teardown };
+}
+
+/**
  * Confirmation Dialog (WCAG Accessible with Focus Trap & Escape handling)
  */
 export function showConfirmDialog({
@@ -80,7 +150,6 @@ export function showConfirmDialog({
   isDanger = false,
 }) {
   return new Promise((resolve) => {
-    const previousActiveElement = document.activeElement;
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop active';
 
@@ -101,67 +170,16 @@ export function showConfirmDialog({
     `;
 
     document.body.appendChild(backdrop);
-    const dialog = backdrop.querySelector('.modal-dialog');
     const cancelBtn = backdrop.querySelector('.modal-cancel');
     const confirmBtn = backdrop.querySelector('.modal-confirm');
-    const closeBtn = backdrop.querySelector('.modal-close');
 
-    // Focus cancel button by default for safety on danger dialogues
-    setTimeout(() => {
-      if (isDanger) {
-        cancelBtn?.focus();
-      } else {
-        confirmBtn?.focus();
-      }
-    }, 50);
-
-    const close = (result) => {
-      document.removeEventListener('keydown', handleKeyDown);
-      backdrop.classList.remove('active');
-      setTimeout(() => {
-        backdrop.remove();
-        if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
-          previousActiveElement.focus();
-        }
-      }, 200);
-      resolve(result);
-    };
-
-    // Focus Trap handler
-    const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        close(false);
-        return;
-      }
-      if (e.key === 'Tab') {
-        const focusables = Array.from(dialog.querySelectorAll(focusableSelector));
-        if (focusables.length === 0) return;
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          }
-        } else {
-          if (document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    closeBtn.onclick = () => close(false);
-    cancelBtn.onclick = () => close(false);
+    const close = (result) => modal.teardown(() => resolve(result));
+    const modal = _attachModalDialog({
+      backdrop,
+      onDismiss: () => close(false),
+      initialFocusEl: isDanger ? cancelBtn : confirmBtn,
+    });
     confirmBtn.onclick = () => close(true);
-    backdrop.onclick = (e) => {
-      if (e.target === backdrop) close(false);
-    };
   });
 }
 
@@ -180,7 +198,6 @@ export function showPromptDialog({
   inputType = 'textarea',
 }) {
   return new Promise((resolve) => {
-    const previousActiveElement = document.activeElement;
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop active';
 
@@ -207,26 +224,16 @@ export function showPromptDialog({
     `;
 
     document.body.appendChild(backdrop);
-    const dialog = backdrop.querySelector('.modal-dialog');
     const inputEl = backdrop.querySelector('#promptDialogInput');
     const errEl = backdrop.querySelector('#promptDialogError');
-    const cancelBtn = backdrop.querySelector('.modal-cancel');
     const confirmBtn = backdrop.querySelector('.modal-confirm');
-    const closeBtn = backdrop.querySelector('.modal-close');
 
-    setTimeout(() => inputEl?.focus(), 50);
-
-    const close = (result) => {
-      document.removeEventListener('keydown', handleKeyDown);
-      backdrop.classList.remove('active');
-      setTimeout(() => {
-        backdrop.remove();
-        if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
-          previousActiveElement.focus();
-        }
-      }, 200);
-      resolve(result);
-    };
+    const close = (result) => modal.teardown(() => resolve(result));
+    const modal = _attachModalDialog({
+      backdrop,
+      onDismiss: () => close(null),
+      initialFocusEl: inputEl,
+    });
 
     const handleConfirm = () => {
       const val = inputEl ? inputEl.value.trim() : '';
@@ -242,36 +249,7 @@ export function showPromptDialog({
       close(val);
     };
 
-    const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        close(null);
-        return;
-      }
-      if (e.key === 'Tab') {
-        const focusables = Array.from(dialog.querySelectorAll(focusableSelector));
-        if (focusables.length === 0) return;
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    closeBtn.onclick = () => close(null);
-    cancelBtn.onclick = () => close(null);
     confirmBtn.onclick = handleConfirm;
-    backdrop.onclick = (e) => {
-      if (e.target === backdrop) close(null);
-    };
 
     inputEl?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || inputType !== 'textarea')) {
@@ -305,33 +283,6 @@ export function renderStatusBadge(status) {
   }
 
   return `<span class="badge ${badgeClass}" role="status">${escapeHtml(label)}</span>`;
-}
-
-/**
- * Accessible Pagination Controls Renderer
- */
-export function renderPagination({ count = 0, pageSize = 10, currentPage = 1, onPrev = '', onNext = '' }) {
-  const totalPages = Math.ceil(count / pageSize) || 1;
-  if (totalPages <= 1) return '';
-
-  const hasPrev = currentPage > 1;
-  const hasNext = currentPage < totalPages;
-
-  return `
-    <nav class="pagination" aria-label="Pagination Navigation">
-      <div style="font-size: 0.85rem; color: var(--color-text-muted);">
-        Showing page <strong>${currentPage}</strong> of <strong>${totalPages}</strong> (${count} total records)
-      </div>
-      <div class="pagination-controls">
-        <button type="button" class="btn btn-outline btn-sm" id="paginationPrevBtn" ${!hasPrev ? 'disabled aria-disabled="true"' : ''} ${onPrev ? `onclick="${onPrev}"` : ''}>
-          &larr; Previous
-        </button>
-        <button type="button" class="btn btn-outline btn-sm" id="paginationNextBtn" ${!hasNext ? 'disabled aria-disabled="true"' : ''} ${onNext ? `onclick="${onNext}"` : ''}>
-          Next &rarr;
-        </button>
-      </div>
-    </nav>
-  `;
 }
 
 /**

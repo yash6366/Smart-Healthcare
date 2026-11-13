@@ -1,12 +1,12 @@
 from django.db import transaction
 from django.db.models import Count
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.exceptions import PermissionDenied, NotFound
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 from .models import Conversation, Message
 from .providers.factory import get_ai_provider
@@ -23,6 +23,7 @@ from .serializers import (
 )
 from apps.medical_records.models import MedicalRecord
 from apps.audit.services import log_audit_event
+from apps.common.serializers import APIErrorResponseSerializer
 
 
 class AIGuidanceView(APIView):
@@ -39,7 +40,16 @@ class AIGuidanceView(APIView):
         tags=["AI Assistant"],
         summary="Request Health Guidance or Symptom Education",
         request=AIGuidanceRequestSerializer,
-        responses={200: AIGuidanceResponseSerializer},
+        responses={
+            200: inline_serializer(
+                name="AIGuidanceEnvelopeResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "data": AIGuidanceResponseSerializer(),
+                },
+            ),
+            400: APIErrorResponseSerializer,
+        },
     )
     def post(self, request):
         serializer = AIGuidanceRequestSerializer(data=request.data)
@@ -83,7 +93,18 @@ class AISummarizeRecordView(APIView):
         tags=["AI Assistant"],
         summary="Summarize Medical Record into Patient-Friendly Terms",
         request=AISummarizeRecordRequestSerializer,
-        responses={200: AISummarizeResponseSerializer},
+        responses={
+            200: inline_serializer(
+                name="AISummarizeEnvelopeResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "data": AISummarizeResponseSerializer(),
+                },
+            ),
+            400: APIErrorResponseSerializer,
+            403: APIErrorResponseSerializer,
+            404: APIErrorResponseSerializer,
+        },
     )
     def post(self, request):
         serializer = AISummarizeRecordRequestSerializer(data=request.data)
@@ -141,8 +162,17 @@ class ConversationListCreateView(APIView):
 
     @extend_schema(
         tags=["AI Assistant"],
+        operation_id="ai_conversations_list",
         summary="List User Conversations",
-        responses={200: ConversationListSerializer(many=True)},
+        responses={
+            200: inline_serializer(
+                name="ConversationListEnvelopeResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "results": ConversationListSerializer(many=True),
+                },
+            ),
+        },
     )
     def get(self, request):
         conversations = (
@@ -163,7 +193,16 @@ class ConversationListCreateView(APIView):
         tags=["AI Assistant"],
         summary="Start New AI Conversation",
         request=ConversationCreateSerializer,
-        responses={201: ConversationDetailSerializer},
+        responses={
+            201: inline_serializer(
+                name="ConversationCreateEnvelopeResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "conversation": ConversationDetailSerializer(),
+                },
+            ),
+            400: APIErrorResponseSerializer,
+        },
     )
     def post(self, request):
         serializer = ConversationCreateSerializer(data=request.data)
@@ -234,7 +273,16 @@ class ConversationDetailView(APIView):
     @extend_schema(
         tags=["AI Assistant"],
         summary="Get Conversation Messages",
-        responses={200: ConversationDetailSerializer},
+        responses={
+            200: inline_serializer(
+                name="ConversationDetailEnvelopeResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "conversation": ConversationDetailSerializer(),
+                },
+            ),
+            404: APIErrorResponseSerializer,
+        },
     )
     def get(self, request, pk):
         conversation = self.get_object(pk, request.user)
@@ -249,6 +297,16 @@ class ConversationDetailView(APIView):
     @extend_schema(
         tags=["AI Assistant"],
         summary="Delete Conversation",
+        responses={
+            200: inline_serializer(
+                name="ConversationDeleteResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "message": serializers.CharField(),
+                },
+            ),
+            404: APIErrorResponseSerializer,
+        },
     )
     def delete(self, request, pk):
         conversation = self.get_object(pk, request.user)
@@ -288,7 +346,18 @@ class ConversationMessageCreateView(APIView):
         tags=["AI Assistant"],
         summary="Send Follow-up Message in Conversation",
         request=MessageCreateSerializer,
-        responses={201: MessageSerializer},
+        responses={
+            201: inline_serializer(
+                name="ConversationMessageEnvelopeResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "user_message": MessageSerializer(),
+                    "assistant_message": MessageSerializer(),
+                },
+            ),
+            400: APIErrorResponseSerializer,
+            404: APIErrorResponseSerializer,
+        },
     )
     def post(self, request, pk):
         try:

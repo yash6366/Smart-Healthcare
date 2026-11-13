@@ -1,6 +1,5 @@
 import pytest
 from datetime import date, timedelta
-from django.utils import timezone
 from rest_framework import status
 from apps.accounts.models import User
 from apps.ai_assistant.models import Conversation, Message
@@ -9,7 +8,6 @@ from apps.medical_records.models import MedicalRecord
 from apps.prescriptions.models import Prescription, PrescriptionItem
 from apps.notifications.models import Notification
 from apps.notifications.services import generate_appointment_reminders
-from apps.patients.models import PatientProfile
 from apps.doctors.models import DoctorProfile
 
 

@@ -150,3 +150,47 @@ class TestMedicalRecordsAndPrescriptions:
         }
         response = client.post("/api/v1/prescriptions/", payload, format="json")
         assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_doctor_lists_records_for_treated_patients_without_duplicates(
+        self, auth_client, doctor_user, patient_user, second_patient_user
+    ):
+        from datetime import date, timedelta
+        from apps.appointments.models import Appointment
+        from apps.medical_records.models import MedicalRecord
+
+        # Multiple appointments between doctor_user and patient_user
+        for offset in (1, 2):
+            Appointment.objects.create(
+                patient=patient_user.patient_profile,
+                doctor=doctor_user.doctor_profile,
+                appointment_date=date.today() + timedelta(days=offset),
+                start_time="10:00:00",
+                end_time="10:30:00",
+                status=Appointment.Status.CONFIRMED,
+                reason=f"Consultation {offset}",
+            )
+
+        # Record created by admin for treated patient (doctor is None -> visible only via appointment link)
+        treated_rec = MedicalRecord.objects.create(
+            patient=patient_user.patient_profile,
+            doctor=None,
+            record_type=MedicalRecord.RecordType.LAB_RESULT,
+            title="External Blood Panel",
+            description="Complete blood count within normal reference ranges.",
+        )
+        # Unrelated patient's record must NOT be returned
+        MedicalRecord.objects.create(
+            patient=second_patient_user.patient_profile,
+            doctor=None,
+            record_type=MedicalRecord.RecordType.LAB_RESULT,
+            title="Unrelated Patient Report",
+            description="Confidential outside record.",
+        )
+
+        client = auth_client(doctor_user)
+        response = client.get("/api/v1/medical-records/")
+        assert response.status_code == status.HTTP_200_OK
+        results = response.json()["results"]
+        returned_ids = [r["id"] for r in results]
+        assert returned_ids.count(treated_rec.id) == 1
+        assert len(returned_ids) == 1

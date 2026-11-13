@@ -5,6 +5,7 @@ from apps.common.models import TimeStampedModel
 
 class Appointment(TimeStampedModel):
     """
+    Logical Category: HEALTHCARE (Table: appointments_appointment)
     Appointment model capturing patient-doctor consultations,
     time slots, reasons, statuses, and cancellation tracking.
     """
@@ -37,7 +38,6 @@ class Appointment(TimeStampedModel):
         max_length=20,
         choices=Status.choices,
         default=Status.PENDING,
-        db_index=True,
     )
     cancellation_reason = models.TextField(blank=True, default="")
     cancelled_by = models.ForeignKey(

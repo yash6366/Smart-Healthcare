@@ -135,14 +135,17 @@ if (!user) return; // Automatic redirect occurred
 
 ### 3.3 Dynamic Layout & Navigation Injection (`frontend/js/components.js`)
 
-Each portal view includes a standard container `<div class="app-layout">` and calls:
+Each portal view includes a standard container `<div class="app-shell">` and calls:
 ```javascript
 import { initAppLayout } from '../../js/components.js';
 
 await initAppLayout({
   title: 'Appointments',
   subtitle: 'Manage upcoming consultations and past health history',
-  breadcrumbs: ['Patient', 'Appointments']
+  breadcrumbs: [
+    { label: 'Patient Portal', path: '/pages/patient/dashboard.html' },
+    { label: 'Appointments' },
+  ],
 });
 ```
 
@@ -157,6 +160,8 @@ This dynamically generates:
 
 - `showToast(message, type, duration)`: Non-blocking animated alert notifications (`'success'`, `'error'`, `'info'`).
 - `showConfirmDialog({ title, message, confirmText, cancelText, isDanger })`: Async/await Promise-based confirmation modal for critical actions like cancellation or verification revocation.
+- `showPromptDialog({ title, message, placeholder, confirmText, cancelText, isDanger })`: Async/await Promise-based modal for collecting user input (e.g. rejection reasons).
+- `debounce(func, wait)`: Shared input debouncing helper used across filter and search inputs.
 - `ICONS`: Reusable inline SVG icons ensuring crisp rendering at any resolution with zero external icon font dependencies.
 - `escapeHtml(str)`: Cross-site scripting (XSS) sanitizer for dynamic DOM insertions.
 - `formatDate()`, `formatTime()`, `formatCurrency()`: Uniform localized date and fee formatters.

@@ -154,6 +154,7 @@
     const eventFilter = document.getElementById('eventTypeFilter');
     const resourceFilter = document.getElementById('resourceTypeFilter');
     const resetBtn = document.getElementById('resetAuditFiltersBtn');
+    const auditLogsMap = new Map();
 
     eventFilter.addEventListener('change', loadAuditLogs);
     resourceFilter.addEventListener('change', loadAuditLogs);
@@ -176,6 +177,7 @@
       try {
         const res = await api.get('/audit/logs/', params);
         const logs = res.results || [];
+        auditLogsMap.clear();
 
         if (logs.length === 0) {
           tbody.innerHTML = `
@@ -190,6 +192,8 @@
           `;
           return;
         }
+
+        logs.forEach(l => auditLogsMap.set(String(l.id), l));
 
         tbody.innerHTML = logs.map(l => `
           <tr>
@@ -206,7 +210,7 @@
               </span>
             </td>
             <td>
-              <button class="btn btn-outline btn-sm view-log-btn" data-log='${JSON.stringify(l)}'>
+              <button class="btn btn-outline btn-sm view-log-btn" data-id="${l.id}">
                 Inspect
               </button>
             </td>
@@ -215,8 +219,8 @@
 
         tbody.querySelectorAll('.view-log-btn').forEach(btn => {
           btn.addEventListener('click', () => {
-            const l = JSON.parse(btn.dataset.log);
-            openAuditModal(l);
+            const l = auditLogsMap.get(btn.dataset.id);
+            if (l) openAuditModal(l);
           });
         });
       } catch (err) {

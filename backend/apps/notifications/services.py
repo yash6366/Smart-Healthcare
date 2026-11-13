@@ -1,12 +1,10 @@
 import logging
 from datetime import datetime, timedelta
 from typing import Any
-from django.contrib.auth import get_user_model
 from django.utils import timezone
 from .models import Notification
 
 logger = logging.getLogger("apps.notifications")
-User = get_user_model()
 
 
 def send_notification(

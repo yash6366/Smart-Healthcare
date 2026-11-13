@@ -205,6 +205,7 @@
     });
 
     const typeFilter = document.getElementById('recordTypeFilter');
+    const recordsMap = new Map();
     typeFilter.addEventListener('change', loadRecords);
 
     loadRecords();
@@ -220,6 +221,7 @@
       try {
         const res = await api.get('/medical-records/', params);
         const records = res.results || [];
+        recordsMap.clear();
 
         if (records.length === 0) {
           tbody.innerHTML = `
@@ -239,6 +241,8 @@
           return;
         }
 
+        records.forEach(r => recordsMap.set(String(r.id), r));
+
         tbody.innerHTML = records.map(r => `
           <tr>
             <td><span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-text-subtle);">#REC-${r.id}</span></td>
@@ -254,7 +258,7 @@
             <td><span class="badge badge-neutral">${escapeHtml(r.record_type_display || r.record_type)}</span></td>
             <td>${formatDate(r.created_at)}</td>
             <td>
-              <button class="btn btn-outline btn-sm view-btn" data-record='${JSON.stringify(r)}'>
+              <button class="btn btn-outline btn-sm view-btn" data-id="${r.id}">
                 Details
               </button>
             </td>
@@ -263,8 +267,8 @@
 
         tbody.querySelectorAll('.view-btn').forEach(btn => {
           btn.addEventListener('click', () => {
-            const r = JSON.parse(btn.dataset.record);
-            openViewModal(r);
+            const r = recordsMap.get(btn.dataset.id);
+            if (r) openViewModal(r);
           });
         });
       } catch (err) {
@@ -337,8 +341,9 @@
     document.getElementById('dismissNewRecordBtn').onclick = closeModal;
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.classList.contains('active')) {
-        closeModal();
+      if (e.key === 'Escape') {
+        if (modal.classList.contains('active')) closeModal();
+        if (viewModal.classList.contains('active')) closeViewModal();
       }
     });
 

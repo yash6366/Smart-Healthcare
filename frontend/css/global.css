@@ -161,16 +161,6 @@ strong, b {
   border: 1px solid var(--color-bg-muted);
 }
 
-/* Reduced Motion Accessibility */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
 /* ==========================================================================
    Clinical Print Stylesheet (Prescriptions, Medical Records, Audit Slips)
    ========================================================================== */
@@ -186,6 +176,7 @@ strong, b {
   .app-topbar,
   .btn,
   .btn-icon,
+  button,
   .action-toolbar,
   .sidebar-backdrop,
   .toast-container,
@@ -193,18 +184,19 @@ strong, b {
   .modal-footer,
   .notification-btn,
   #mobileMenuToggle,
+  #printPrescriptionBtn,
   .skip-link {
     display: none !important;
   }
 
-  .app-main {
-    margin-left: 0 !important;
-    padding: 0 !important;
-  }
-
+  .app-shell,
+  .app-main,
   .app-content {
-    max-width: 100% !important;
+    margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: transparent !important;
   }
 
   .card {
@@ -226,9 +218,20 @@ strong, b {
   .modal-backdrop.active .modal-dialog {
     box-shadow: none !important;
     border: 1px solid #000 !important;
+    width: 100% !important;
     max-width: 100% !important;
     max-height: none !important;
     transform: none !important;
+  }
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th, td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 8px !important;
   }
 
   .data-table {

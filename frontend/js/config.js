@@ -45,17 +45,14 @@ export const CONFIG = {
  * Returns root-relative or relative path safely based on current location
  */
 export function getAppPath(path) {
-  // If the path starts with '/', calculate depth from current window.location
   if (path.startsWith('/')) {
-    const depth = window.location.pathname.split('/').filter(Boolean).length;
-    // Find where 'frontend' or root is
+    // Prefix with '/.../frontend' when served from a nested directory instead of domain root
     const pathParts = window.location.pathname.split('/');
     const frontendIndex = pathParts.indexOf('frontend');
     if (frontendIndex !== -1) {
       const prefix = pathParts.slice(0, frontendIndex + 1).join('/') || '';
       return prefix + path;
     }
-    // When served from root of frontend
     return path;
   }
   return path;

@@ -10,6 +10,14 @@ base_dir = Path(__file__).resolve().parent.parent
 if str(base_dir) not in sys.path:
     sys.path.insert(0, str(base_dir))
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
+# Ensure config/__init__.py registers PyMySQL fallback if native MySQLdb is absent
+import config  # noqa: E402, F401
+
+_default_settings = (
+    "config.settings.production"
+    if (os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+    else "config.settings.development"
+)
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", _default_settings)
 
 application = get_asgi_application()

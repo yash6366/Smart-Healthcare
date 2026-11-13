@@ -11,7 +11,6 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
 
-from .models import User
 from .serializers import (
     ChangePasswordSerializer,
     LoginSerializer,
@@ -20,6 +19,7 @@ from .serializers import (
     UserSerializer,
 )
 from apps.audit.services import log_audit_event
+from apps.common.serializers import APIErrorResponseSerializer
 
 REFRESH_COOKIE_NAME = "vakcare_refresh_token"
 REFRESH_COOKIE_PATH = "/api/v1/auth/"
@@ -42,7 +42,7 @@ def set_refresh_cookie(response: Response, refresh_token: str) -> None:
 
 def delete_refresh_cookie(response: Response) -> None:
     """Deletes the HttpOnly refresh token cookie upon logout."""
-    response.delete_cookie(key=REFRESH_COOKIE_NAME, path=REFRESH_COOKIE_PATH)
+    response.delete_cookie(key=REFRESH_COOKIE_NAME, path=REFRESH_COOKIE_PATH, samesite="Lax")
 
 
 class RegisterView(APIView):
@@ -58,7 +58,17 @@ class RegisterView(APIView):
         tags=["Auth"],
         summary="Register New Patient Account",
         request=RegisterSerializer,
-        responses={201: UserSerializer},
+        responses={
+            201: inline_serializer(
+                name="RegisterSuccessResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "message": serializers.CharField(),
+                    "user": UserSerializer(),
+                },
+            ),
+            400: APIErrorResponseSerializer,
+        },
     )
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -173,7 +183,28 @@ class CookieTokenRefreshView(TokenRefreshView):
     or an HttpOnly cookie ('vakcare_refresh_token').
     Rotated refresh tokens are automatically updated in the HttpOnly cookie.
     """
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth"
 
+    @extend_schema(
+        tags=["Auth"],
+        summary="Refresh Access Token (Body or HttpOnly Cookie)",
+        request=inline_serializer(
+            name="CookieTokenRefreshRequest",
+            fields={"refresh": serializers.CharField(required=False, allow_blank=True)},
+        ),
+        responses={
+            200: inline_serializer(
+                name="CookieTokenRefreshResponse",
+                fields={
+                    "access": serializers.CharField(),
+                    "refresh": serializers.CharField(required=False),
+                },
+            ),
+            401: APIErrorResponseSerializer,
+            429: APIErrorResponseSerializer,
+        },
+    )
     def post(self, request, *args, **kwargs):
         data = request.data.copy() if hasattr(request.data, "copy") else dict(request.data)
         if "refresh" not in data or not data["refresh"]:
@@ -208,7 +239,16 @@ class LogoutView(APIView):
         tags=["Auth"],
         summary="Logout and Blacklist Refresh Token",
         request=LogoutSerializer,
-        responses={200: inline_serializer(name="LogoutResponse", fields={"status": serializers.CharField()})},
+        responses={
+            200: inline_serializer(
+                name="LogoutResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "message": serializers.CharField(),
+                },
+            ),
+            400: APIErrorResponseSerializer,
+        },
     )
     def post(self, request):
         refresh_token = request.data.get("refresh") or request.COOKIES.get(REFRESH_COOKIE_NAME)
@@ -291,7 +331,16 @@ class ChangePasswordView(APIView):
         tags=["Auth"],
         summary="Change Password",
         request=ChangePasswordSerializer,
-        responses={200: inline_serializer(name="PasswordChangeResponse", fields={"status": serializers.CharField()})},
+        responses={
+            200: inline_serializer(
+                name="PasswordChangeResponse",
+                fields={
+                    "status": serializers.CharField(default="success"),
+                    "message": serializers.CharField(),
+                },
+            ),
+            400: APIErrorResponseSerializer,
+        },
     )
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={"request": request})

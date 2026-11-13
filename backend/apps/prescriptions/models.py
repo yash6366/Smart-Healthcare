@@ -4,6 +4,7 @@ from apps.common.models import TimeStampedModel
 
 class Prescription(TimeStampedModel):
     """
+    Logical Category: HEALTHCARE (Table: prescriptions_prescription)
     Formal medical prescription issued by a licensed healthcare professional.
     Contains diagnosis, advice, and linked medication items.
     """
@@ -55,6 +56,7 @@ class Prescription(TimeStampedModel):
 
 class PrescriptionItem(models.Model):
     """
+    Logical Category: HEALTHCARE (Table: prescriptions_prescriptionitem)
     Individual medication item within a prescription with explicit dosage, frequency, and duration.
     """
     prescription = models.ForeignKey(

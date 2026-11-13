@@ -1,10 +1,10 @@
+from django.conf import settings
 from django.db import connection
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny
-from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, inline_serializer
-from rest_framework import serializers
 
 
 class HealthCheckView(APIView):
@@ -57,6 +57,7 @@ class ReadinessCheckView(APIView):
                 fields={
                     "status": serializers.CharField(default="ready"),
                     "database": serializers.CharField(default="connected"),
+                    "ai_provider": serializers.CharField(default="mock"),
                 },
             ),
             503: inline_serializer(
@@ -80,7 +81,6 @@ class ReadinessCheckView(APIView):
             db_ready = False
 
         if db_ready:
-            from django.conf import settings
             return Response(
                 {
                     "status": "ready",

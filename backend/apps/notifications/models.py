@@ -4,6 +4,7 @@ from django.db import models
 
 class Notification(models.Model):
     """
+    Logical Category: COMMUNICATION (Table: notifications_notification)
     In-app notifications and alerts. Prepared for future push/email asynchronous worker dispatch.
     """
 
