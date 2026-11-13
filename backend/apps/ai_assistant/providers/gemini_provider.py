@@ -15,8 +15,8 @@ class GeminiAIProvider(BaseAIProvider):
     """
 
     def __init__(self):
-        self.api_key = getattr(settings, "AI_PROVIDER_API_KEY", "")
-        self.model = getattr(settings, "AI_PROVIDER_MODEL", "gemini-2.5-flash")
+        self.api_key = getattr(settings, "AI_PROVIDER_API_KEY", "") or getattr(settings, "GEMINI_API_KEY", "")
+        self.model = getattr(settings, "AI_PROVIDER_MODEL", "gemini-3.5-flash")
         self._fallback = MockAIProvider()
 
     @staticmethod

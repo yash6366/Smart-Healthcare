@@ -543,6 +543,13 @@ LOGGING = {
 
 # AI Provider Configuration
 AI_PROVIDER = os.getenv("AI_PROVIDER", "mock")
-AI_PROVIDER_API_KEY = os.getenv("AI_PROVIDER_API_KEY", "")
-_default_ai_model = "gpt-4o-mini" if AI_PROVIDER.lower() in ("openai", "chatgpt") else "gemini-flash-latest"
+AI_PROVIDER_API_KEY = (
+    os.getenv("AI_PROVIDER_API_KEY")
+    or os.getenv("GEMINI_API_KEY")
+    or os.getenv("OPENAI_API_KEY")
+    or ""
+)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+_default_ai_model = "gpt-4o-mini" if AI_PROVIDER.lower() in ("openai", "chatgpt") else "gemini-3.5-flash"
 AI_PROVIDER_MODEL = os.getenv("AI_PROVIDER_MODEL") or _default_ai_model
